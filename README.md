@@ -133,7 +133,7 @@ Alternatives: GNU diffutils contains `cmp`, which outputs offsets and byte value
 28 252 M-*   42 "
 ```
 
-`hexdiff.py` adds context by formatting in universal diff format, outputs hex values, and joins differences using [semantic cleanup](https://github.com/google/diff-match-patch/wiki/API#diff_cleanupsemanticdiffs--null):
+`hexdiff.py` adds context by outputting in unified diff format, uses hex values, and joins differences using [semantic cleanup](https://github.com/google/diff-match-patch/wiki/API#diff_cleanupsemanticdiffs--null):
 
 ```bash
 ./hexdiff.py test-bytes1 test-bytes2-added | vim -c 'set filetype=diff' -
