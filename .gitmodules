@@ -1,0 +1,3 @@
+[submodule "sequences/suffix_trees"]
+	path = sequences/suffix_trees
+	url = https://github.com/nevesnunes/suffix-trees.git
