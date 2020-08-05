@@ -55,7 +55,7 @@ Output:
 Caption:
 
 |Symbol|Description|
-|---|---|
+|:---:|:---|
 |`O`|counts > max_counts / 2|
 |`o`|counts > max_counts / 3|
 |`u`|counts > max_counts / 4|
