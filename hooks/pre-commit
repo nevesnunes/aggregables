@@ -1,0 +1,11 @@
+#!/bin/sh
+
+set -eu
+
+command -v markdown-toc > /dev/null 2>&1 \
+    || npm install -g markdown-toc
+
+markdown-toc -i README.md
+
+# After modifying tracked files, add them again to the index
+git add -A
