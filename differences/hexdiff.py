@@ -26,7 +26,7 @@ def isolate_bytes(diff):
     return new_diff
 
 
-def print_universal_format(hex_diff):
+def print_unified_format(hex_diff):
     change_symbol = None
     offset = 0
     next_offset = 0
@@ -53,4 +53,4 @@ with open(sys.argv[1], "rb") as f1, open(sys.argv[2], "rb") as f2:
 diff = dmp.diff_main(c1.hex(), c2.hex())
 dmp.diff_cleanupSemantic(diff)
 diff = isolate_bytes(diff)
-print_universal_format(diff)
+print_unified_format(diff)
