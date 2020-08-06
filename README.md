@@ -4,6 +4,9 @@ Snippets and scripts to parse and manipulate data patterns. These are categorize
 
 <!-- toc -->
 
+- [Time Series](#time-series)
+  * [Compare deviations of two time spans in logs, grouped by captured variables](#compare-deviations-of-two-time-spans-in-logs-grouped-by-captured-variables)
+  * [Sort logs by timestamps, including lines without one](#sort-logs-by-timestamps-including-lines-without-one)
 - [Captures](#captures)
   * [Visualize co-ocurrences](#visualize-co-ocurrences)
   * [Histogram](#histogram)
@@ -13,11 +16,79 @@ Snippets and scripts to parse and manipulate data patterns. These are categorize
 - [Sequences](#sequences)
   * [Filter out repeated k-line patterns in a plaintext stream](#filter-out-repeated-k-line-patterns-in-a-plaintext-stream)
   * [Find longest k-repeating substrings in byte stream](#find-longest-k-repeating-substrings-in-byte-stream)
-- [Time Series](#time-series)
-  * [Compare deviations of two time spans in logs, grouped by captured variables](#compare-deviations-of-two-time-spans-in-logs-grouped-by-captured-variables)
-  * [Sort logs by timestamps, including lines without one](#sort-logs-by-timestamps-including-lines-without-one)
 
 <!-- tocstop -->
+
+## Time Series
+
+### Compare deviations of two time spans in logs, grouped by captured variables
+
+- [measure_deviating_groups.py](./captures/log-observer/measure_deviating_groups.py)
+
+Use cases:
+
+- Analyzing logs where we are not certain of which variables to observe
+
+Usage:
+
+```bash
+# Split time span at point where timestamps occurred after '1 week ago'
+./measure_deviating_groups.py access.log.1 '1 week ago'
+```
+
+Output (sorted by standard deviation and values of captured variables):
+
+1. Low deviation: identical keys or similar distribution of values:
+
+```
+virtual_host (std_dev: 0.0)
+        [(None, 9)]
+        [(None, 5)]
+---
+request_method (std_dev: 0.0162962962962963)
+        [('GET', 5), ('POST', 4)]
+        [('GET', 4), ('POST', 1)]
+[...]
+```
+
+2. High deviation: All keys are distinct:
+
+```
+path (std_dev: 0.06666666666666667)
+        [('/administrator/', 5), ('/administrator/index.php', 4)]
+        [('/index.php?option=com_contact&view=contact&id=1', 2), ('/foo.com/cpg/displayimage.php?album=1&pos=40', 1), ('/', 1), ('/index.php?option=com_content&view=article&id=50&Itemid=56', 1)]
+```
+
+Caption (for each block):
+
+|Line|Description|
+|---:|:---|
+|`1`|captured variable|
+|`2`|time span 1, observed values and frequencies|
+|`3`|time span 2, observed values and frequencies|
+
+### Sort logs by timestamps, including lines without one
+
+```bash
+awk '
+    timestamp {
+        if(/^([0-9-]* [0-9,:]* ).*/) { print $0 }
+        else { print timestamp $0 }
+    }
+    match($0, /^([0-9-]* [0-9,:]* ).*/, e) {
+        timestamp=e[1]
+    }
+    NR==1 { print }
+' *.log *.log.1 \
+    | sort \
+    | awk '{
+        gsub("^[0-9-]*[[:space:]]*[0-9,:]*", "")
+        if(!x[$0]++) { print }
+    }' \
+    | vim -
+```
+
+Alternatives: https://unix.stackexchange.com/questions/195604/matching-and-merging-lines-with-awk-printing-with-solaris
 
 ## Captures
 
@@ -226,74 +297,3 @@ References:
 - https://en.wikipedia.org/wiki/Longest_repeated_substring_problem
 - https://en.wikipedia.org/wiki/Gestalt_Pattern_Matching
 - https://stackoverflow.com/questions/11090289/find-longest-repetitive-sequence-in-a-string
-
-## Time Series
-
-### Compare deviations of two time spans in logs, grouped by captured variables
-
-- [measure_deviating_groups.py](./captures/log-observer/measure_deviating_groups.py)
-
-Use cases:
-
-- Analyzing logs where we are not certain of which variables to observe
-
-Usage:
-
-```bash
-# Split time span at point where timestamps occurred after '1 week ago'
-./measure_deviating_groups.py access.log.1 '1 week ago'
-```
-
-Output (sorted by standard deviation and values of captured variables):
-
-1. Low deviation: identical keys or similar distribution of values:
-
-```
-virtual_host (std_dev: 0.0)
-        [(None, 9)]
-        [(None, 5)]
----
-request_method (std_dev: 0.0162962962962963)
-        [('GET', 5), ('POST', 4)]
-        [('GET', 4), ('POST', 1)]
-[...]
-```
-
-2. High deviation: All keys are distinct:
-
-```
-path (std_dev: 0.06666666666666667)
-        [('/administrator/', 5), ('/administrator/index.php', 4)]
-        [('/index.php?option=com_contact&view=contact&id=1', 2), ('/foo.com/cpg/displayimage.php?album=1&pos=40', 1), ('/', 1), ('/index.php?option=com_content&view=article&id=50&Itemid=56', 1)]
-```
-
-Caption (for each block):
-
-|Line|Description|
-|---:|:---|
-|`1`|captured variable|
-|`2`|time span 1, observed values and frequencies|
-|`3`|time span 2, observed values and frequencies|
-
-### Sort logs by timestamps, including lines without one
-
-```bash
-awk '
-    timestamp {
-        if(/^([0-9-]* [0-9,:]* ).*/) { print $0 }
-        else { print timestamp $0 }
-    }
-    match($0, /^([0-9-]* [0-9,:]* ).*/, e) {
-        timestamp=e[1]
-    }
-    NR==1 { print }
-' *.log *.log.1 \
-    | sort \
-    | awk '{
-        gsub("^[0-9-]*[[:space:]]*[0-9,:]*", "")
-        if(!x[$0]++) { print }
-    }' \
-    | vim -
-```
-
-Alternatives: https://unix.stackexchange.com/questions/195604/matching-and-merging-lines-with-awk-printing-with-solaris
