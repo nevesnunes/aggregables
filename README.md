@@ -264,8 +264,7 @@ request_method (std_dev: 0.0162962962962963)
 ```
 path (std_dev: 0.06666666666666667)
         [('/administrator/', 5), ('/administrator/index.php', 4)]
-        [('/index.php?option=com_contact&view=contact&id=1', 2), ('/foo.com/cpg/displayimage.php?album=1&pos=40', 1), ('/', 1), ('/index.php?option=com_content&view=article&id=50&Itemid=56',
-1)]
+        [('/index.php?option=com_contact&view=contact&id=1', 2), ('/foo.com/cpg/displayimage.php?album=1&pos=40', 1), ('/', 1), ('/index.php?option=com_content&view=article&id=50&Itemid=56', 1)]
 ```
 
 Caption (for each block):
