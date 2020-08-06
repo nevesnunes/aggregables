@@ -244,7 +244,7 @@ Usage:
 ./measure_deviating_groups.py access.log.1 '1 week ago'
 ```
 
-Output (sorted by standard deviation of captured variables):
+Output (sorted by standard deviation and values of captured variables):
 
 1. Low deviation: identical keys or similar distribution of values:
 
