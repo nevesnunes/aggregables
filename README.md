@@ -14,6 +14,7 @@ Snippets and scripts to parse and manipulate data patterns. These are categorize
   * [Filter out repeated k-line patterns in a plaintext stream](#filter-out-repeated-k-line-patterns-in-a-plaintext-stream)
   * [Find longest k-repeating substrings in byte stream](#find-longest-k-repeating-substrings-in-byte-stream)
 - [Time Series](#time-series)
+  * [Compare deviations of two time spans in logs, grouped by captured variables](#compare-deviations-of-two-time-spans-in-logs-grouped-by-captured-variables)
   * [Sort logs by timestamps, including lines without one](#sort-logs-by-timestamps-including-lines-without-one)
 
 <!-- tocstop -->
