@@ -250,12 +250,12 @@ Output (sorted by standard deviation and values of captured variables):
 
 ```
 virtual_host (std_dev: 0.0)
-        {None: 9}
-        {None: 5}
+        [(None, 9)]
+        [(None, 5)]
 ---
 request_method (std_dev: 0.0162962962962963)
-        {'GET': 5, 'POST': 4}
-        {'GET': 4, 'POST': 1}
+        [('GET', 5), ('POST', 4)]
+        [('GET', 4), ('POST', 1)]
 [...]
 ```
 
@@ -263,8 +263,9 @@ request_method (std_dev: 0.0162962962962963)
 
 ```
 path (std_dev: 0.06666666666666667)
-        {'/administrator/': 5, '/administrator/index.php': 4}
-        {'/': 1, '/foo.com/cpg/displayimage.php?album=1&pos=40': 1, '/index.php?option=com_contact&view=contact&id=1': 2, '/index.php?option=com_content&view=article&id=50&Itemid=56': 1}
+        [('/administrator/', 5), ('/administrator/index.php', 4)]
+        [('/index.php?option=com_contact&view=contact&id=1', 2), ('/foo.com/cpg/displayimage.php?album=1&pos=40', 1), ('/', 1), ('/index.php?option=com_content&view=article&id=50&Itemid=56',
+1)]
 ```
 
 Caption (for each block):
