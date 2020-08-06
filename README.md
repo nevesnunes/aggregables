@@ -228,6 +228,52 @@ References:
 
 ## Time Series
 
+### Compare deviations of two time spans in logs, grouped by captured variables
+
+- [measure_deviating_groups.py](./captures/log-observer/measure_deviating_groups.py)
+
+Use cases:
+
+- Analyzing logs where we are not certain of which variables to observe
+
+Usage:
+
+```bash
+# Split time span at point where timestamps occurred after '1 week ago'
+./measure_deviating_groups.py access.log.1 '1 week ago'
+```
+
+Output (sorted by standard deviation of captured variables):
+
+1. Low deviation: identical keys or similar distribution of values:
+
+```
+virtual_host (std_dev: 0.0)
+        {None: 9}
+        {None: 5}
+---
+request_method (std_dev: 0.0162962962962963)
+        {'GET': 5, 'POST': 4}
+        {'GET': 4, 'POST': 1}
+[...]
+```
+
+2. High deviation: All keys are distinct:
+
+```
+path (std_dev: 0.06666666666666667)
+        {'/administrator/': 5, '/administrator/index.php': 4}
+        {'/': 1, '/foo.com/cpg/displayimage.php?album=1&pos=40': 1, '/index.php?option=com_contact&view=contact&id=1': 2, '/index.php?option=com_content&view=article&id=50&Itemid=56': 1}
+```
+
+Caption (for each block):
+
+|Line|Description|
+|---:|:---|
+|`1`|captured variable|
+|`2`|time span 1, observed values and frequencies|
+|`3`|time span 2, observed values and frequencies|
+
 ### Sort logs by timestamps, including lines without one
 
 ```bash
