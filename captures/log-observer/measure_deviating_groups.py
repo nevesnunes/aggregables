@@ -65,5 +65,5 @@ for comparison in comparisons:
     stdev = comparison['stdev']
     print(f"---\n{key} (std_dev: {stdev})")
     for i in range(2):
-        subitems = {k: regions[i][key][k] for k in sorted(regions[i][key].keys())}
+        subitems = sorted(regions[i][key].items(), key=lambda x: x[1], reverse=True)
         print(f"\t{subitems}")
