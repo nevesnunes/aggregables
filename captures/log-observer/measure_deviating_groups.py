@@ -9,14 +9,19 @@ import sys
 
 with open(sys.argv[1], "r") as f:
     content = f.readlines()
-#with open(sys.argv[2], "r") as f:
-#    rules = f.readlines()
-from_timestamp=dateparser.parse(sys.argv[2])
+with open(sys.argv[2], "r") as f:
+    rules = f.readlines()
+from_timestamp=dateparser.parse(sys.argv[3])
 
-log_pattern = re.compile('(?P<ip>.*?) (?P<remote_log_name>.*?) (?P<userid>.*?) \[(?P<date>.*?)(?= ) (?P<timezone>.*?)\] \"(?P<request_method>.*?) (?P<path>.*?)(?P<request_version> HTTP/.*)?\" (?P<status>.*?) (?P<length>.*?) \"(?P<referrer>.*?)\" \"(?P<user_agent>.*?)\" \"(?P<session_id>.*?)\"( (?P<generation_time_micro>.*?))?( (?P<virtual_host>.*))?', re.IGNORECASE)
+patterns = []
+for rule in rules:
+    patterns.append(re.compile(rule.strip(), re.IGNORECASE))
 regions = [{}, {}]
 for line in content:
-    match = log_pattern.match(line.strip())
+    for pattern in patterns:
+        match = pattern.match(line.strip())
+        if match:
+            break
     if not match:
         continue
 
