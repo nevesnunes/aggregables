@@ -27,7 +27,7 @@ Snippets and scripts to parse and manipulate data patterns. These are categorize
 
 Use cases:
 
-- Analyzing logs where we are not certain of which variables to observe
+- Analyzing logs where we are not certain of which variables to observe, but know a point in time to compare against (e.g. before an exception was thrown)
 
 Usage:
 
