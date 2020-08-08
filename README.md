@@ -33,7 +33,7 @@ Usage:
 
 ```bash
 # Split time span at point where timestamps occurred after '1 week ago'
-./measure_deviating_groups.py access.log.1 '1 week ago'
+./measure_deviating_groups.py access.log.1 access.log.rules '1 week ago'
 ```
 
 Output (sorted by standard deviation and values of captured variables):
