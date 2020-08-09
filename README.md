@@ -152,6 +152,8 @@ Caption:
 |`u`|counts > max_counts / 4|
 |`.`|counts > 0|
 
+Alternatives: [matplotlib/heatmap.py](./captures/matplotlib/heatmap.py)
+
 ### Histogram
 
 ```awk
@@ -186,6 +188,8 @@ Output (occurrences, distribution, value):
 1 |       == 0.20 | 2
 1 |       == 0.20 | 3
 ```
+
+Alternatives: [matplotlib/bar.py](./captures/matplotlib/bar.py)
 
 ### Proximity search for two or more substrings
 
