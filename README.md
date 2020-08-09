@@ -315,7 +315,7 @@ Input (hex dump of file):
 00000010: 1b1c 1d77 1e77 2122 2122 96aa 9ff3       ...w.w!"!"....
 ```
 
-Output (longest 2-repeating substrings with count):
+Output (longest 2-repeating substrings with total count):
 
 ```
 b'pq'
