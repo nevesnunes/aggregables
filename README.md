@@ -150,14 +150,36 @@ Caption:
 ### Histogram
 
 ```awk
-for (key in out) {
-    h = ""
-    max_h = 8 * out[key] / total
-    for (i=0; i<max_h; i++) {
-        h = h "="
-    }
-    printf "%16s | %8s %.2f | %s\n", out[key], h, (out[key] / total), key
+#!/usr/bin/awk -f
+
+{
+    out[$0]++
+    total++
 }
+END {
+    for (key in out) {
+        h = ""
+        max_h = 8 * out[key] / total
+        for (i=0; i<max_h; i++) {
+            h = h "="
+        }
+        printf "%16s | %8s %.2f | %s\n", out[key], h, (out[key] / total), key
+    }
+}
+```
+
+Usage:
+
+```bash
+printf '%s\n' 1 1 1 2 3 | histogram.awk
+```
+
+Output (occurrences, distribution, value):
+
+```
+3 |    ===== 0.60 | 1
+1 |       == 0.20 | 2
+1 |       == 0.20 | 3
 ```
 
 ### Proximity search for two or more substrings
