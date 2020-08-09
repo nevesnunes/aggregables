@@ -81,6 +81,11 @@ Caption (for each block):
 |`2`|time span 1, observed values and their occurrences|
 |`3`|time span 2, observed values and their occurrences|
 
+Related work:
+
+- [The Path from Unstructured Logs to Observability - Honeycomb](https://www.honeycomb.io/wp-content/uploads/2019/08/From-Unstructured-Logs-to-Observability-Honeycomb.pdf)
+    - [Explore with BubbleUp](https://docs.honeycomb.io/working-with-your-data/bubbleup/)
+
 ### Sort logs by timestamps, including lines without one
 
 ```bash
