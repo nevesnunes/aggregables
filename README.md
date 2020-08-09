@@ -27,7 +27,8 @@ Snippets and scripts to parse and manipulate data patterns. These are categorize
 
 Use cases:
 
-- Analyzing logs where we are not certain of which variables to observe, but know a point in time to compare against (e.g. before an exception was thrown)
+- Analyzing logs where we are not certain of which variables to observe, but know a point in time to compare against (e.g. before an exception was thrown); Our assumption is that variables with higher deviation of values are more likely to be interesting to observe
+    - e.g. to understand why an exception was thrown, if all requests across the full time span (i.e. all logged requests) use the verb `GET`, then the verb doesn't offer any clues; however, if the user making requests only appeares on the second time span and not on the first, maybe we should investigate what is special about that user session
 
 Usage:
 
@@ -36,9 +37,22 @@ Usage:
 ./measure_deviating_groups.py access.log.1 access.log.rules '1 week ago'
 ```
 
-Output (sorted by standard deviation and values of captured variables):
+In this case, assuming the current date is "08/Aug/2020", log lines will be split into two sets for analysis:
 
-1. Low deviation: identical keys or similar distribution of values:
+```
+set 1 | 109.169.248.247 - - [12/Dec/2015:18:25:11 +0100] "GET /administrator/ HTTP/1.1" [...]
+      | [...]
+      | 109.184.11.34 - - [12/Dec/2015:18:32:56 +0100] "GET /administrator/ HTTP/1.1" [...]
+     ---
+set 2 | 165.225.8.79 - - [06/Aug/2020:12:47:50 +0200] "GET /foo.com/cpg/displayimage.php?album=1&pos=40 HTTP/1.0" [...]
+      | [...]
+```
+
+Each variable (e.g. `ip`, `date`, `request method`...) is matched against regex patterns containing [named capture groups](https://docs.python.org/3/howto/regex.html#non-capturing-and-named-groups). For each variable, we identify values and count their occurrences.
+
+Output (sorted by standard deviation of values and occurrences):
+
+1. Low deviation: identical values or similar distribution of occurrences:
 
 ```
 virtual_host (std_dev: 0.0)
@@ -51,7 +65,7 @@ request_method (std_dev: 0.0162962962962963)
 [...]
 ```
 
-2. High deviation: All keys are distinct:
+2. High deviation: All values are distinct:
 
 ```
 path (std_dev: 0.06666666666666667)

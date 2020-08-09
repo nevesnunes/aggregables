@@ -16,7 +16,7 @@ from_timestamp=dateparser.parse(sys.argv[3])
 patterns = []
 for rule in rules:
     patterns.append(re.compile(rule.strip(), re.IGNORECASE))
-regions = [{}, {}]
+event_sets = [{}, {}]
 for line in content:
     for pattern in patterns:
         match = pattern.match(line.strip())
@@ -33,31 +33,31 @@ for line in content:
         i = 0
         if timestamp.date() > from_timestamp.date():
             i = 1
-        if key not in regions[i]:
-            regions[i][key] = {}
+        if key not in event_sets[i]:
+            event_sets[i][key] = {}
         value = match_dict[key]
-        if value not in regions[i][key]:
-            regions[i][key][value] = 0
-        regions[i][key][value] += 1
-        if '_count' not in regions[i]:
-            regions[i]['_count'] = 0
-        regions[i]['_count'] += 1
+        if value not in event_sets[i][key]:
+            event_sets[i][key][value] = 0
+        event_sets[i][key][value] += 1
+        if '_count' not in event_sets[i]:
+            event_sets[i]['_count'] = 0
+        event_sets[i]['_count'] += 1
 
 comparisons = []
-for key in regions[0].keys():
+for key in event_sets[0].keys():
     if key.startswith('_'):
         continue
 
     all_subkeys = set()
     for i in range(2):
-        for subkey in regions[i][key].keys():
+        for subkey in event_sets[i][key].keys():
             all_subkeys.add(subkey)
     all_subkeys_stdev = 0
     for subkey in all_subkeys:
         subvalues = [0] * 2
         for i in range(2):
-            if subkey in regions[i][key].keys():
-                subvalues[i] = regions[i][key][subkey] / regions[i]['_count']
+            if subkey in event_sets[i][key].keys():
+                subvalues[i] = event_sets[i][key][subkey] / event_sets[i]['_count']
         all_subkeys_stdev += statistics.pstdev(subvalues)
     comparisons.append({'stdev':all_subkeys_stdev, 'key':key})
 
@@ -70,5 +70,5 @@ for comparison in comparisons:
     stdev = comparison['stdev']
     print(f"---\n{key} (std_dev: {stdev})")
     for i in range(2):
-        subitems = sorted(regions[i][key].items(), key=lambda x: x[1], reverse=True)
+        subitems = sorted(event_sets[i][key].items(), key=lambda x: x[1], reverse=True)
         print(f"\t{subitems}")
