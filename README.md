@@ -78,8 +78,8 @@ Caption (for each block):
 |Line|Description|
 |---:|:---|
 |`1`|captured variable|
-|`2`|time span 1, observed values and frequencies|
-|`3`|time span 2, observed values and frequencies|
+|`2`|time span 1, observed values and their occurrences|
+|`3`|time span 2, observed values and their occurrences|
 
 ### Sort logs by timestamps, including lines without one
 
