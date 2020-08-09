@@ -48,7 +48,7 @@ set 2 | 165.225.8.79 - - [06/Aug/2020:12:47:50 +0200] "GET /foo.com/cpg/displayi
       | [...]
 ```
 
-Variables (e.g. `ip`, `date`, `request method`...) are matched against regex patterns containing [named capture groups](https://docs.python.org/3/howto/regex.html#non-capturing-and-named-groups). For each variable, we identify values and count their occurrences.
+Variables (e.g. `ip`, `date`, `verb`...) are matched against regex patterns containing [named capture groups](https://docs.python.org/3/howto/regex.html#non-capturing-and-named-groups). For each variable, we identify values and count their occurrences.
 
 Output (sorted by standard deviation of values and occurrences):
 
