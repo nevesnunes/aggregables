@@ -86,9 +86,10 @@ Related work:
 - [The Path from Unstructured Logs to Observability - Honeycomb](https://www.honeycomb.io/wp-content/uploads/2019/08/From-Unstructured-Logs-to-Observability-Honeycomb.pdf)
     - [Explore with BubbleUp](https://docs.honeycomb.io/working-with-your-data/bubbleup/)
 
-### Sort logs by timestamps, including lines without one
+### Sort logs by timestamps, including non-timestamped lines
 
 ```bash
+# Non-timestamped lines will use the last parsed timestamp
 awk '
     timestamp {
         if(/^([0-9-]* [0-9,:]* ).*/) { print $0 }
@@ -107,7 +108,9 @@ awk '
     | vim -
 ```
 
-Alternatives: https://unix.stackexchange.com/questions/195604/matching-and-merging-lines-with-awk-printing-with-solaris
+Alternatives:
+
+- Using `getline` to merge non-timestamped lines - https://unix.stackexchange.com/questions/195604/matching-and-merging-lines-with-awk-printing-with-solaris
 
 ## Captures
 
@@ -154,6 +157,13 @@ Caption:
 
 Alternatives: [matplotlib/heatmap.py](./captures/matplotlib/heatmap.py)
 
+Related work:
+
+- [Wow! signal - Signal measurement - Wikipedia](https://en.wikipedia.org/wiki/Wow!_signal#Signal_measurement)
+- [PAW: Physics Analysis Workstation - An Introductory Tutorial - CERN Document Server](https://cdsweb.cern.ch/record/2296392/files/paw.pdf)
+    - 6.3 HBOOK batch as the first step of the analysis
+- [charts \- Command\-line Unix ASCII\-based charting / plotting tool \- Stack Overflow](https://stackoverflow.com/questions/123378/command-line-unix-ascii-based-charting-plotting-tool)
+
 ### Histogram
 
 ```awk
@@ -190,6 +200,11 @@ Output (occurrences, distribution, value):
 ```
 
 Alternatives: [matplotlib/bar.py](./captures/matplotlib/bar.py)
+
+Related work: 
+
+- [GitHub \- bitly/data\_hacks: Command line utilities for data analysis](https://github.com/bitly/data_hacks)
+- [GitHub \- wizzat/distribution: Short, simple, direct scripts for creating ASCII graphical histograms in the terminal\.](https://github.com/wizzat/distribution)
 
 ### Proximity search for two or more substrings
 
