@@ -205,6 +205,7 @@ Related work:
 
 - [GitHub \- bitly/data\_hacks: Command line utilities for data analysis](https://github.com/bitly/data_hacks)
 - [GitHub \- wizzat/distribution: Short, simple, direct scripts for creating ASCII graphical histograms in the terminal\.](https://github.com/wizzat/distribution)
+- [Wicked Cool Usage · holman/spark Wiki · GitHub](https://github.com/holman/spark/wiki/Wicked-Cool-Usage)
 
 ### Proximity search for two or more substrings
 
