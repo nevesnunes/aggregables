@@ -6,13 +6,14 @@ Snippets and scripts to parse and manipulate data patterns. These are categorize
 
 - [Time Series](#time-series)
   * [Compare deviations of two time spans in logs, grouped by captured variables](#compare-deviations-of-two-time-spans-in-logs-grouped-by-captured-variables)
-  * [Sort logs by timestamps, including lines without one](#sort-logs-by-timestamps-including-lines-without-one)
+  * [Sort logs by timestamps, including non-timestamped lines](#sort-logs-by-timestamps-including-non-timestamped-lines)
 - [Captures](#captures)
   * [Visualize co-ocurrences](#visualize-co-ocurrences)
   * [Histogram](#histogram)
   * [Proximity search for two or more substrings](#proximity-search-for-two-or-more-substrings)
 - [Differences](#differences)
   * [Summarize distinct bytes in two files](#summarize-distinct-bytes-in-two-files)
+  * [Trace changes in variables](#trace-changes-in-variables)
 - [Sequences](#sequences)
   * [Filter out repeated k-line patterns in a plaintext stream](#filter-out-repeated-k-line-patterns-in-a-plaintext-stream)
   * [Find longest k-repeating substrings in byte stream](#find-longest-k-repeating-substrings-in-byte-stream)
@@ -270,7 +271,7 @@ Alternatives: GNU diffutils contains `cmp`, which outputs offsets and byte value
 `hexdiff.py` adds context by outputting in unified diff format, uses hex values, and joins differences using [semantic cleanup](https://github.com/google/diff-match-patch/wiki/API#diff_cleanupsemanticdiffs--null):
 
 ```bash
-./hexdiff.py test-bytes1 test-bytes2-added | vim -c 'set filetype=diff' -
+./hexdiff.py test-bytes1 test-bytes2-added | vim -c 'set ft=diff' -
 ```
 
 ```diff
@@ -307,6 +308,48 @@ p='^\('$(diff -Naurw \
         END {print a}
     ')'\)' && \
 diff -Naurw <(grep "$p" ~/f1) <(grep "$p" ~/f2)
+```
+
+### Trace changes in variables
+
+- [trace.py](./differences/trace.py)
+
+Usage:
+
+```bash
+printf '%s\n' 'a 1' 'a 2' 'b 2' 'a 1' 'c 3' \
+    | ./trace.py \
+    | vim -c 'set ft=diff' -
+```
+
+Output (count of variable changes; variable; value):
+
+```diff
+-[0]       a: None
++[1]       a: 1
+ [0]       b: None
+ [0]       c: None
+~~~
+-[1]       a: 1
++[2]       a: 2
+ [0]       b: None
+ [0]       c: None
+~~~
+ [2]       a: 2
+-[0]       b: None
++[1]       b: 2
+ [0]       c: None
+~~~
+-[2]       a: 2
++[3]       a: 1
+ [1]       b: 2
+ [0]       c: None
+~~~
+ [3]       a: 1
+ [1]       b: 2
+-[0]       c: None
++[1]       c: 3
+~~~
 ```
 
 ## Sequences
