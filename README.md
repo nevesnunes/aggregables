@@ -8,7 +8,7 @@ Snippets and scripts to parse and manipulate data patterns. These are categorize
   * [Compare deviations of two time spans in logs, grouped by captured variables](#compare-deviations-of-two-time-spans-in-logs-grouped-by-captured-variables)
   * [Sort logs by timestamps, including non-timestamped lines](#sort-logs-by-timestamps-including-non-timestamped-lines)
 - [Captures](#captures)
-  * [Visualize co-ocurrences](#visualize-co-ocurrences)
+  * [Visualize co-occurrences](#visualize-co-occurrences)
   * [Histogram](#histogram)
   * [Proximity search for two or more substrings](#proximity-search-for-two-or-more-substrings)
 - [Differences](#differences)
@@ -17,6 +17,7 @@ Snippets and scripts to parse and manipulate data patterns. These are categorize
 - [Sequences](#sequences)
   * [Filter out repeated k-line patterns in a plaintext stream](#filter-out-repeated-k-line-patterns-in-a-plaintext-stream)
   * [Find longest k-repeating substrings in byte stream](#find-longest-k-repeating-substrings-in-byte-stream)
+  * [Colorize contiguous longest k-repeating substrings](#colorize-contiguous-longest-k-repeating-substrings)
 
 <!-- tocstop -->
 
@@ -115,7 +116,7 @@ Alternatives:
 
 ## Captures
 
-### Visualize co-ocurrences
+### Visualize co-occurrences
 
 - [heapmap.py](./captures/heatmap.py)
 
@@ -402,3 +403,22 @@ References:
 - https://en.wikipedia.org/wiki/Longest_repeated_substring_problem
 - https://en.wikipedia.org/wiki/Gestalt_Pattern_Matching
 - https://stackoverflow.com/questions/11090289/find-longest-repetitive-sequence-in-a-string
+
+### Colorize contiguous longest k-repeating substrings
+
+Usage:
+
+```bash
+printf '%s\n' 00 111 12 13 111 12 13 14 | ./repeated-sum.py
+```
+
+Output (count of contiguous occurrences in `[...]` + single substring):
+
+```
+            00
+colorized | [2]
+          | 111
+          | 12
+          | 13
+            14
+```
