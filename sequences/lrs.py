@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 from suffix_trees.suffix_trees import STree
-import ipdb
 import itertools
 import re
 import sys
@@ -38,9 +37,13 @@ def parse_contents(contents):
     return (lrs, new_contents)
 
 
-with ipdb.launch_ipdb_on_exception():
-    with open(sys.argv[1], "rb") as f:
-        content = f.read()
+if __name__ == "__main__":
+    content = None
+    if not sys.stdin.isatty():
+        content = sys.stdin.read()
+    else:
+        with open(sys.argv[1], "rb") as f:
+            content = f.read()
 
     contents = [content]
     top_substrings = []
