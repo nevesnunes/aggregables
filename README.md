@@ -11,6 +11,7 @@ Snippets and scripts to parse and manipulate data patterns. These are categorize
   * [Visualize co-occurrences](#visualize-co-occurrences)
   * [Histogram](#histogram)
   * [Proximity search for two or more substrings](#proximity-search-for-two-or-more-substrings)
+  * [Trace patterns while preserving full output](#trace-patterns-while-preserving-full-output)
 - [Differences](#differences)
   * [Summarize distinct bytes in two files](#summarize-distinct-bytes-in-two-files)
   * [Trace changes in variables](#trace-changes-in-variables)
@@ -251,6 +252,27 @@ test1:6:it was quick
 test1-11-the fox
 test1:12:was quick
 ```
+
+### Trace patterns while preserving full output
+
+Example (matches `1`, flushing output on each match):
+
+```bash
+(echo 1 && sleep 1 && echo 1 && sleep 1 && echo 2) \
+    | tee /tmp/a \
+    | awk '/1/ {
+        cmd = "date +%s%N"
+        cmd | getline d
+        close(cmd)
+        print $0 " " d
+        system("")
+    }' \
+    | tee /tmp/b
+```
+
+Alternatives:
+
+- [GitHub \- cirruslabs/echelon: hierarchical progress bars in terminal on steroids](https://github.com/cirruslabs/echelon)
 
 ## Differences
 
