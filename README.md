@@ -15,6 +15,7 @@ Snippets and scripts to parse and manipulate data patterns. These are categorize
 - [Differences](#differences)
   * [Summarize distinct bytes in two files](#summarize-distinct-bytes-in-two-files)
   * [Trace changes in variables](#trace-changes-in-variables)
+  * [Apply ignore filters to output](#apply-ignore-filters-to-output)
 - [Sequences](#sequences)
   * [Filter out repeated k-line patterns in a plaintext stream](#filter-out-repeated-k-line-patterns-in-a-plaintext-stream)
   * [Find longest k-repeating substrings in byte stream](#find-longest-k-repeating-substrings-in-byte-stream)
@@ -373,6 +374,25 @@ Output (count of variable changes; variable; value):
 -[0]       c: None
 +[1]       c: 3
 ~~~
+```
+
+### Apply ignore filters to output
+
+- [filterdiff.py](./differences/filterdiff.py)
+
+Usage:
+
+```bash
+# Include all lines with changes
+./filterdiff.py <(printf '%s' '[0-9]+') test-1 test-2 2>/dev/null
+# Output:
+# ['banana ', '-123', '+456']
+# ['p', '-apaia', '+ear']
+
+# Exclude matched lines with changes
+./filterdiff.py <(printf '%s' '[0-9]+') test-1 test-2 >/dev/null
+# Output:
+# ['p', '-apaia', '+ear']
 ```
 
 ## Sequences
