@@ -395,6 +395,8 @@ Usage:
 # ['p', '-apaia', '+ear']
 ```
 
+TODO: Add references with line numbers in filtered output to complete output
+
 ## Sequences
 
 ### Filter out repeated k-line patterns in a plaintext stream
