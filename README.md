@@ -203,7 +203,15 @@ Output (occurrences, distribution, value):
 1 |       == 0.20 | 3
 ```
 
-Alternatives: [matplotlib/bar.py](./captures/matplotlib/bar.py)
+Alternatives: 
+
+- Single chart: [matplotlib/bar.py](./captures/matplotlib/bar.py)
+    - Usage: `./bar.py 1.csv`
+- Small multiple charts: [matplotlib/multiple_bar.py](./captures/matplotlib/multiple_bar.py)
+    - Usage: `paste -d ',' 1.csv 3.csv 12.csv | ./multiple_bar.py`
+    - Interpolates bar color to make value differences across multiple scales more explicit
+    - Sorts by standard deviation for faster detection of anomalies
+    - Outputs to pdf to handle large numbers of charts
 
 Related work: 
 
