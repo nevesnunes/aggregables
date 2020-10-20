@@ -210,7 +210,7 @@ Alternatives:
 - Small multiple charts: [matplotlib/multiple_bar.py](./captures/matplotlib/multiple_bar.py)
     - Usage: `paste -d ',' 1.csv 3.csv 12.csv | ./multiple_bar.py`
     - Interpolates bar color to make value differences across multiple scales more explicit
-    - Sorts by standard deviation for faster detection of anomalies
+    - Sorts by [Tukey's fences](https://en.wikipedia.org/wiki/Outlier#Tukey's_fences) and standard deviation for faster detection of anomalies
     - Outputs to pdf to handle large numbers of charts
 
 Related work: 

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from enum import Enum
 import io
 import math
 from matplotlib.backends.backend_pdf import PdfPages
@@ -22,6 +23,34 @@ def chunks(lst, n):
     """Yield successive n-sized chunks from lst."""
     for i in range(0, len(lst), n):
         yield lst[i : i + n]
+
+
+OutlierStrategy = Enum("OutlierStrategy", "stdev tukey_fences")
+outlier_strategy = OutlierStrategy.tukey_fences
+
+
+def outlier_factor(values, strategy=outlier_strategy):
+    if strategy == OutlierStrategy.tukey_fences:
+        # https://datatest.readthedocs.io/en/stable/how-to/outliers.html
+        multiplier = 1.5
+        lower = float("inf")
+        upper = 0
+        values = sorted(values)
+        if len(values) >= 2:
+            midpoint = int(round(len(values) / 2.0))
+            q1 = statistics.median(values[:midpoint])
+            q3 = statistics.median(values[midpoint:])
+            iqr = q3 - q1
+            lower = q1 - (iqr * multiplier)
+            upper = q3 + (iqr * multiplier)
+        elif values:
+            lower = upper = values[0]
+        else:
+            lower = upper = 0
+        outliers = [x for x in values if x < lower or x > upper]
+        return len(outliers)
+    else:
+        return round(statistics.stdev(values), 2)
 
 
 if __name__ == "__main__":
@@ -51,8 +80,14 @@ if __name__ == "__main__":
         local_min_value = min(values)
         if local_min_value < min_value:
             min_value = local_min_value
-        comparisons.append({"stdev": round(statistics.stdev(values), 2), "key": values})
-    comparisons = sorted(comparisons, key=lambda x: x["stdev"], reverse=True)
+        comparisons.append(
+            {
+                "outlier_factor": outlier_factor(values),
+                "stdev": outlier_factor(values, OutlierStrategy.stdev),
+                "key": values,
+            }
+        )
+    comparisons = sorted(comparisons, key=lambda x: (x["outlier_factor"], x["stdev"]), reverse=True)
 
     def make_bars(subplot_count, i, comparisons):
         fig = plt.figure()
@@ -72,7 +107,7 @@ if __name__ == "__main__":
                     )
                 )
             ax.set_title(
-                f'{data.dtype.names[comparisons_i]}\nstdev: {comparisons[comparisons_i]["stdev"]}'
+                f'{data.dtype.names[comparisons_i]}\noutliers: {comparisons[comparisons_i]["outlier_factor"]}, stdev: {comparisons[comparisons_i]["stdev"]}'
             )
         fig.tight_layout()
         return fig
