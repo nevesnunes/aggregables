@@ -35,6 +35,8 @@ if __name__ == "__main__":
         contents = filename
     if re.match(r'"\?^[0-9]', first_line):
         has_names = False
+    # TODO: Infer dtype
+    # - https://numpy.org/devdocs/user/basics.io.genfromtxt.html#choosing-the-data-type
     data = np.genfromtxt(contents, missing_values=0.0, delimiter=",", names=has_names)
 
     fig, ax = plt.subplots()
