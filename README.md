@@ -10,6 +10,7 @@ Snippets and scripts to parse and manipulate data patterns. These are categorize
 - [Captures](#captures)
   * [Visualize co-occurrences](#visualize-co-occurrences)
   * [Histogram](#histogram)
+  * [Line chart](#line-chart)
   * [Proximity search for two or more substrings](#proximity-search-for-two-or-more-substrings)
   * [Trace patterns while preserving full output](#trace-patterns-while-preserving-full-output)
 - [Differences](#differences)
@@ -221,10 +222,45 @@ Related work:
 - [Edward Tufte forum: Sparkline theory and practice](http://www.edwardtufte.com/bboard/q-and-a-fetch-msg?msg_id=0001OR&topic_id=1)
     - [Wicked Cool Usage · holman/spark Wiki · GitHub](https://github.com/holman/spark/wiki/Wicked-Cool-Usage)
 
+### Line chart
+
+- [line.py](./captures/matplotlib/line.py)
+
+Example (instruction trace of an executable):
+
+- Source code: [loops.c](./sequences/loops.c)
+  - This program takes the "else" branch in the first iteration, then the "if" branch in the remaining iterations. We can observe in the line chart that there are two blocks of repeated patterns, with the second block taking significantly more instructions.
+
+```bash
+# Generate trace file `instrace.loops.log`
+~/opt/dynamorio/build/bin64/drrun \
+  -c ~/opt/dynamorio/build/api/bin/libinstrace_x86_text.so \
+  -- ./loops
+
+# Filter out addresses from shared library modules
+awk '
+match($0, /^0x4[0-9a-f]+/) {
+  print substr($0, RSTART, RLENGTH)
+}
+' instrace.loops.log \
+  > instrace-filtered.loops.log
+
+# Add csv header, 
+# convert hex values to integers, 
+# then format label values back to hex
+cat \
+  <(echo "foo") \
+  <(python -c 'import sys; [print(int(x,16)) for x in sys.stdin.read().strip().split("\n")]' \
+    < ../../sequences/instrace-filtered.loops.log) \
+  | ./line.py --hex
+```
+
+- Output: [image](./captures/matplotlib/line.png)
+
 ### Proximity search for two or more substrings
 
-- [magrep.sh](./capture/magrep.sh)
-- [magrep.py](./capture/magrep.py)
+- [magrep.sh](./captures/magrep.sh)
+- [magrep.py](./captures/magrep.py)
 
 Usage: `./magrep.py test1 'brown.*quick'`
 
