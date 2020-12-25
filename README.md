@@ -167,11 +167,11 @@ Alternatives:
 
 Related work:
 
-- [GitHub \- Netflix/flamescope: FlameScope is a visualization tool for exploring different time ranges as Flame Graphs\.](https://github.com/Netflix/flamescope)
 - [Wow! signal - Signal measurement - Wikipedia](https://en.wikipedia.org/wiki/Wow!_signal#Signal_measurement)
 - [PAW: Physics Analysis Workstation - An Introductory Tutorial - CERN Document Server](https://cdsweb.cern.ch/record/2296392/files/paw.pdf)
     - 6.3 HBOOK batch as the first step of the analysis
 - [charts \- Command\-line Unix ASCII\-based charting / plotting tool \- Stack Overflow](https://stackoverflow.com/questions/123378/command-line-unix-ascii-based-charting-plotting-tool)
+- [GitHub \- Netflix/flamescope: FlameScope is a visualization tool for exploring different time ranges as Flame Graphs\.](https://github.com/Netflix/flamescope)
 
 ### Histogram
 
