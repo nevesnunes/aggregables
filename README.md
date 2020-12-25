@@ -160,10 +160,14 @@ Caption:
 |`u`|counts > max_counts / 4|
 |`.`|counts > 0|
 
-Alternatives: [matplotlib/heatmap.py](./captures/matplotlib/heatmap.py)
+Alternatives: 
+
+- 2D data: [matplotlib/heatmap.py](./captures/matplotlib/heatmap.py)
+- 1D data shaped as 2D: [matplotlib/heatmap-sequence.py](./captures/matplotlib/heatmap-sequence.py)
 
 Related work:
 
+- [GitHub \- Netflix/flamescope: FlameScope is a visualization tool for exploring different time ranges as Flame Graphs\.](https://github.com/Netflix/flamescope)
 - [Wow! signal - Signal measurement - Wikipedia](https://en.wikipedia.org/wiki/Wow!_signal#Signal_measurement)
 - [PAW: Physics Analysis Workstation - An Introductory Tutorial - CERN Document Server](https://cdsweb.cern.ch/record/2296392/files/paw.pdf)
     - 6.3 HBOOK batch as the first step of the analysis
