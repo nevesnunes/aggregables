@@ -330,6 +330,18 @@ Alternatives:
 
 - [hexdiff.py](./differences/hexdiff.py)
 
+Benchmarking:
+
+```bash
+# Given 2 files with size ~= 481M
+seq 1 5 \
+  | while read -r i; do \
+    sudo sh -c 'free && sync && echo 3 > /proc/sys/vm/drop_caches && free' \
+      && time ./hexdiff.py foo bar \
+  done
+# 21.2406 seconds = (24.555 + 19.692 + 19.115 + 23.204 + 19.637) / 5
+```
+
 Alternatives: GNU diffutils contains `cmp`, which outputs offsets and byte values in a byte-by-byte manner:
 
 ```

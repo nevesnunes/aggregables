@@ -3,6 +3,8 @@
 import diff_match_patch
 import sys
 
+MAX_CHUNK_DISPLAY_LEN = 80
+
 
 def isolate_bytes(diff):
     new_diff = []
@@ -31,17 +33,29 @@ def print_unified_format(hex_diff):
     offset = 0
     next_offset = 0
     for pair in diff:
-        if pair[0] == -1:
+        change_type = pair[0]
+        chunk_hex = pair[1]
+        if change_type == -1:
             change_symbol = "-"
-            next_offset -= len(pair[1])
-        elif pair[0] == 1:
+            next_offset -= len(chunk_hex)
+        elif change_type == 1:
             change_symbol = "+"
-            next_offset += len(pair[1])
-        elif pair[0] == 0:
+            next_offset += len(chunk_hex)
+        elif change_type == 0:
             offset = next_offset
             change_symbol = " "
-            next_offset += len(pair[1])
-        print(f"{change_symbol}{hex(offset).rjust(8)}: {pair[1]} | {bytes.fromhex(pair[1])}")
+            next_offset += len(chunk_hex)
+        # Ommit middle bytes when outputting large differences.
+        # Prefer displaying more start bytes than end bytes, as relevant
+        # info is more likely to be at start (e.g. metadata, headers...).
+        if len(chunk_hex) > MAX_CHUNK_DISPLAY_LEN:
+            print(
+                f"{change_symbol}{hex(offset//2).rjust(8)}: {chunk_hex[:MAX_CHUNK_DISPLAY_LEN - 20]} [...] {chunk_hex[-20:]} | {bytes.fromhex(chunk_hex[:MAX_CHUNK_DISPLAY_LEN - 20])} [...] {bytes.fromhex(chunk_hex[-20:])} [Ommitted {(len(chunk_hex) - MAX_CHUNK_DISPLAY_LEN) // 2} byte(s)]"
+            )
+        else:
+            print(
+                f"{change_symbol}{hex(offset//2).rjust(8)}: {chunk_hex} | {bytes.fromhex(chunk_hex)}"
+            )
         if pair[0] == 0:
             offset = next_offset
 
