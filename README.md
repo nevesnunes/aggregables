@@ -18,6 +18,7 @@ Snippets and scripts to parse and manipulate data patterns. These are categorize
   * [Trace changes in variables](#trace-changes-in-variables)
   * [Apply ignore filters to output](#apply-ignore-filters-to-output)
 - [Sequences](#sequences)
+  * [Summarize matched bytes in file](#summarize-matched-bytes-in-file)
   * [Filter out repeated k-line patterns in a plaintext stream](#filter-out-repeated-k-line-patterns-in-a-plaintext-stream)
   * [Find longest k-repeating substrings in byte stream](#find-longest-k-repeating-substrings-in-byte-stream)
   * [Colorize contiguous longest k-repeating substrings](#colorize-contiguous-longest-k-repeating-substrings)
@@ -356,10 +357,12 @@ Alternatives: GNU diffutils contains `cmp`, which outputs offsets and byte value
 `hexdiff.py` adds context by outputting in unified diff format, uses hex values, and joins differences using [semantic cleanup](https://github.com/google/diff-match-patch/wiki/API#diff_cleanupsemanticdiffs--null):
 
 ```bash
-./hexdiff.py test-bytes1 test-bytes2-added | vim -c 'set ft=diff' -
+./hexdiff.py test-bytes1 test-bytes2-added
 ```
 
 ```diff
+--- test-bytes1
++++ test-bytes2-added
       0x0: 7071a42f707170716d | b'pq\xa4/pqpqm'
 -    0x12: 140c | b'\x14\x0c'
 +    0x12: 151d | b'\x15\x1d'
@@ -459,6 +462,33 @@ Usage:
 TODO: Add references with line numbers in filtered output to complete output
 
 ## Sequences
+
+### Summarize matched bytes in file
+
+- [hexgrep.py](./sequences/hexgrep.py)
+
+Usage:
+
+```bash
+# hex encoded
+./hexgrep.py <(printf '%s\n' foo bar) 6f
+
+# literal
+./hexgrep.py <(printf '%s\n' foo bar) o
+```
+
+Output:
+
+```
+# hex encoded
+/proc/self/fd/11:1(0x1):b'o'
+/proc/self/fd/11:2(0x2):b'o'
+
+# literal
+Assuming literal bytes due to error: Odd-length string
+/proc/self/fd/11:1(0x1):b'o'
+/proc/self/fd/11:2(0x2):b'o'
+```
 
 ### Filter out repeated k-line patterns in a plaintext stream
 
