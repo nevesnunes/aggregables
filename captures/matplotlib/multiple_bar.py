@@ -50,6 +50,8 @@ def outlier_factor(values, strategy=outlier_strategy):
         outliers = [x for x in values if x < lower or x > upper]
         return len(outliers)
     else:
+        if len(values) < 2:
+            return 0
         return round(statistics.stdev(values), 2)
 
 
@@ -64,30 +66,53 @@ if __name__ == "__main__":
         with open(sys.argv[1], "rb") as f:
             first_line = f.readline()
         contents = sys.argv[1]
-    if re.match(r'"\?^[0-9]', first_line):
-        has_names = False
-    data = np.genfromtxt(contents, missing_values=0.0, delimiter=",", names=has_names)
+    try:
+        if re.match(r'^"\?[0-9]', first_line):
+            has_names = False
+    except TypeError:
+        if re.compile(b'^"?[0-9]').match(first_line):
+            has_names = False
+    data = np.genfromtxt(
+        contents, filling_values=np.inf, delimiter=",", names=has_names, deletechars=""
+    )
 
     var_count = len(data.dtype.names)
     min_value = float("inf")
     max_value = 0
     comparisons = []
     for i in range(var_count):
+        name = data.dtype.names[i]
         values = data[data.dtype.names[i]]
-        local_max_value = max(values)
+        values_no_filling = [x for x in values if x != np.inf]
+        values = [x if x != np.inf else -1.0 for x in values]
+        if len(values_no_filling) == 0:
+            values_no_filling = values[:]
+        local_max_value = max(values_no_filling)
         if local_max_value > max_value:
             max_value = local_max_value
-        local_min_value = min(values)
+        local_min_value = min(values_no_filling)
         if local_min_value < min_value:
             min_value = local_min_value
+        stdev = outlier_factor(values_no_filling, OutlierStrategy.stdev)
+        local_value_range = abs(local_max_value - local_min_value)
+        if local_value_range == 0:
+            normalized_stdev = 0
+        else:
+            normalized_stdev = round(stdev / abs(local_max_value - local_min_value), 4)
         comparisons.append(
             {
-                "outlier_factor": outlier_factor(values),
-                "stdev": outlier_factor(values, OutlierStrategy.stdev),
-                "key": values,
+                "name": name,
+                "outlier_factor": outlier_factor(values_no_filling),
+                "stdev": stdev,
+                "normalized_stdev": normalized_stdev,
+                "values": values,
             }
         )
-    comparisons = sorted(comparisons, key=lambda x: (x["outlier_factor"], x["stdev"]), reverse=True)
+    comparisons = sorted(
+        comparisons,
+        key=lambda x: (x["outlier_factor"], x["normalized_stdev"]),
+        reverse=True,
+    )
 
     def make_bars(subplot_count, i, comparisons):
         fig = plt.figure()
@@ -95,8 +120,8 @@ if __name__ == "__main__":
             comparisons_i = (subplot_count * i) + j
             if comparisons_i > len(comparisons) - 1:
                 break
-            values = comparisons[comparisons_i]["key"]
-            ax = fig.add_subplot(math.ceil(subplot_count / 2), n_cols, j + 1)
+            values = comparisons[comparisons_i]["values"]
+            ax = fig.add_subplot(math.ceil(subplot_count / n_cols), n_cols, j + 1)
             b = ax.bar(br, values, width, align="center")
             for j, value in enumerate(values):
                 b[j].set_color(
@@ -106,20 +131,26 @@ if __name__ == "__main__":
                         (value - min_value) / (max_value - min_value),
                     )
                 )
+            label = comparisons[comparisons_i]["name"]
+            if len(label) > 64:
+                label = label[0:8] + "…" + label[-(64 - 8) :]
             ax.set_title(
-                f'{data.dtype.names[comparisons_i]}\noutliers: {comparisons[comparisons_i]["outlier_factor"]}, stdev: {comparisons[comparisons_i]["stdev"]}'
+                f'{label}\noutliers: {comparisons[comparisons_i]["outlier_factor"]}, stdev: {comparisons[comparisons_i]["normalized_stdev"]} ({comparisons[comparisons_i]["stdev"]})'
             )
         fig.tight_layout()
         return fig
 
     min_color = "#1f77b4"
     max_color = "#14466c"
-    subplot_count = 6
-    n_cols = 2
+    # subplot_count = 6
+    # n_cols = 2
+    subplot_count = 3
+    n_cols = 1
     n_rows = var_count / n_cols + 1
     width = 0.75
     a = data[data.dtype.names[0]]
     br = np.arange(0, len(a) - width)
+
     comparisons_chunked = list(chunks(comparisons, subplot_count))
     if var_count > subplot_count:
         pdf = PdfPages("out.pdf")
