@@ -85,7 +85,7 @@ if __name__ == "__main__":
             for offset in offsets:
                 iteration = ""
                 if e != "be" or i != 0:
-                    iteration = f"e={e},k={i}"
+                    iteration = f"e={e},k={'+' if i > 0 else ''}{i}"
                 results.append(f"{highlight_bold(filename)}:{highlight_primary(offset)}({highlight_primary(hex(offset))}):{highlight_bold(iteration)}{':' if iteration else ''}{binascii.hexlify(needle).decode('ascii')} {needle}")
 
     if len(results) < 1:

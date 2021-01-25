@@ -557,3 +557,8 @@ colorized | [2]
           | 13
             14
 ```
+
+# TODO
+
+- Sequence Alignment
+    - https://campuspress.yale.edu/knightlab/ruddle/plotreads/
