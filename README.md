@@ -334,7 +334,10 @@ Alternatives:
 Benchmarking:
 
 ```bash
-# Given 2 files with size ~= 481M
+# Given: 
+# - CPU: Intel i5-4200U
+# - RAM: 12GiB DDR3 1600 MT/s
+# - Input: 2 files with size ~= 481M
 seq 1 5 \
   | while read -r i; do \
     sudo sh -c 'free && sync && echo 3 > /proc/sys/vm/drop_caches && free' \
