@@ -77,10 +77,17 @@ class ClusteringStrategy(BaseStrategy):
             if candidate_dist < pick_dist:
                 pick_dist = candidate_dist
                 pick_i = i
+
+        eps = 0
         if pick_i == np.inf or x[pick_i] <= 0:
+            eps_candidates = sorted(list(set(x)))
+            if len(eps_candidates) > 1:
+                eps = abs(eps_candidates[1] - eps_candidates[0]) / 2
+        else:
+            eps = x[pick_i]
+        if eps <= 0:
             return [-1 for x in values], 0, -1
 
-        eps = x[pick_i]
         m = DBSCAN(eps=eps, min_samples=4)
         m.fit(X)
         clusters = m.labels_
