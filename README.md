@@ -468,29 +468,41 @@ TODO: Add references with line numbers in filtered output to complete output
 
 ### Summarize matched bytes in file
 
-- [hexgrep.py](./sequences/hexgrep.py)
+- [hexmatch.py](./sequences/hexmatch.py)
 
 Usage:
 
 ```bash
 # hex encoded
-./hexgrep.py <(printf '%s\n' foo bar) 6f
+./hexmatch.py <(printf '%s\n' foo bar) 6f
 
 # literal
-./hexgrep.py <(printf '%s\n' foo bar) o
+./hexmatch.py <(printf '%s\n' foo bar) $(printf '%s' o | xxd -p)
+
+# little-endian
+hexmatch.py <(printf '%s\n' DCBA) $(printf '%s' BC | xxd -p) -e le                                 
+
+# up to off-by-2 values
+hexmatch.py <(printf '%s\n' AAA BBB ZZZ) $(printf '%s' C | xxd -p) -k 2
 ```
 
-Output:
+Output (`(0x[...])`: offset in hex, `e`: endianess, `k`: off-by-k, `b'[...]'`: matched bytes):
 
 ```
-# hex encoded
+# hex encoded / literal
 /proc/self/fd/11:1(0x1):b'o'
 /proc/self/fd/11:2(0x2):b'o'
 
-# literal
-Assuming literal bytes due to error: Odd-length string
-/proc/self/fd/11:1(0x1):b'o'
-/proc/self/fd/11:2(0x2):b'o'
+# little-endian
+/proc/self/fd/11:1(0x1):e=le,k=0:4342 b'CB'
+
+# up to off-by-2 values
+/proc/self/fd/11:0(0x0):e=be,k=-2:41 b'A'
+/proc/self/fd/11:1(0x1):e=be,k=-2:41 b'A'
+/proc/self/fd/11:2(0x2):e=be,k=-2:41 b'A'
+/proc/self/fd/11:4(0x4):e=be,k=-1:42 b'B'
+/proc/self/fd/11:5(0x5):e=be,k=-1:42 b'B'
+/proc/self/fd/11:6(0x6):e=be,k=-1:42 b'B'
 ```
 
 ### Filter out repeated k-line patterns in a plaintext stream
