@@ -486,7 +486,7 @@ hexmatch.py <(printf '%s\n' DCBA) $(printf '%s' BC | xxd -p) -e le
 hexmatch.py <(printf '%s\n' AAA BBB ZZZ) $(printf '%s' C | xxd -p) -k 2
 ```
 
-Output (`(0x[...])`: offset in hex, `e`: endianess, `k`: off-by-k, `b'[...]'`: matched bytes):
+Output (`0x[...]`: offset in hex, `e`: endianess, `k`: off-by-k, `b'[...]'`: matched bytes):
 
 ```
 # hex encoded / literal
