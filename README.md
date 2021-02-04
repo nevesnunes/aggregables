@@ -450,19 +450,21 @@ Output (count of variable changes; variable; value):
 Usage:
 
 ```bash
-# Include all lines with changes
-./filterdiff.py <(printf '%s' '[0-9]+') test-1 test-2 2>/dev/null
-# Output:
-# ['banana ', '-123', '+456']
-# ['p', '-apaia', '+ear']
-
-# Exclude matched lines with changes
-./filterdiff.py <(printf '%s' '[0-9]+') test-1 test-2 >/dev/null
-# Output:
-# ['p', '-apaia', '+ear']
+./filterdiff.py <(printf '%s\n' '([0-9]+)') test-1 test-2
 ```
 
-TODO: Add references with line numbers in filtered output to complete output
+Output (Includes filtered value `123` from first file as context, not as difference):
+
+```diff
+--- test-1
++++ test-2
+@@ -1,4 +1,4 @@
+ apple
+ banana 123
+ orange
+-papaia
++pear
+```
 
 ## Sequences
 
