@@ -450,14 +450,14 @@ Output (count of variable changes; variable; value):
 Usage:
 
 ```bash
-./filterdiff.py <(printf '%s\n' '([0-9]+)') test-1 test-2
+./filterdiff.py <(printf '%s\n' '([0-9]+)') test1-text1-filterdiff test1-text2-filterdiff
 ```
 
 Output (Includes filtered value `123` from first file as context, not as difference):
 
 ```diff
---- test-1
-+++ test-2
+--- base
++++ derivative
 @@ -1,4 +1,4 @@
  apple
  banana 123

@@ -13,11 +13,11 @@ def debug(*args):
         print(args)
 
 
-def compute_replacements(patterns, contents):
+def compute_replacements(patterns, texts):
     replace_counter = 0
     replacements = {}
     for pattern in patterns:
-        for i, c in enumerate(contents):
+        for i, c in enumerate(texts):
             text_to_replace = c
             for match in re.finditer(pattern, c):
                 if not text_to_replace:
@@ -46,9 +46,9 @@ def compute_replacements(patterns, contents):
     return replacements
 
 
-def apply_replacements(replacements, contents):
+def apply_replacements(replacements, texts):
     replaced_texts = []
-    for i, c in enumerate(contents):
+    for i, c in enumerate(texts):
         replaced_text = c
         for k, v in replacements.items():
             for matched_str in v["matched_strs"][i]:
@@ -59,34 +59,38 @@ def apply_replacements(replacements, contents):
     return replaced_texts
 
 
-if __name__ == "__main__":
-    patterns_filename = sys.argv[1]
-    text1_filename = sys.argv[2]
-    text2_filename = sys.argv[3]
-
+def compute_diffs(rules, text1, text2):
     patterns = []
-    with open(patterns_filename, "r") as f:
-        rules = f.readlines()
-        for rule in rules:
-            patterns.append(re.compile(rule.strip(), re.IGNORECASE | re.MULTILINE))
+    for rule in rules:
+        patterns.append(re.compile(rule.strip(), re.IGNORECASE | re.MULTILINE))
 
-    with open(text1_filename, "r") as f1, open(text2_filename, "r") as f2:
-        c1 = f1.read().strip()
-        c2 = f2.read().strip()
-
-    contents = [c1, c2]
-    replacements = compute_replacements(patterns, contents)
-    replaced_texts = apply_replacements(replacements, contents)
+    texts = [text1, text2]
+    replacements = compute_replacements(patterns, texts)
+    replaced_texts = apply_replacements(replacements, texts)
 
     diffs = difflib.unified_diff(
         replaced_texts[0].split("\n"),
         replaced_texts[1].split("\n"),
-        fromfile=sys.argv[2],
-        tofile=sys.argv[3],
+        fromfile="base",
+        tofile="derivative",
     )
+    replaced_diffs = []
     for diff in diffs:
         for k, v in replacements.items():
             for i in range(2):
                 for matched_str in v["matched_strs"][i]:
                     diff = re.sub(v["replace_str"], matched_str, diff, 1)
-        print(diff.rstrip())
+            replaced_diffs.append(diff.rstrip())
+    return replaced_diffs
+
+
+if __name__ == "__main__":
+    with open(sys.argv[1], "r") as f1:
+        rules = f1.readlines()
+    with open(sys.argv[2], "r") as f2:
+        text1 = f2.read().strip()
+    with open(sys.argv[3], "r") as f3:
+        text2 = f3.read().strip()
+
+    for diff in compute_diffs(rules, text1, text2):
+        print(diff)
