@@ -466,6 +466,20 @@ Output (Includes filtered value `123` from first file as context, not as differe
 +pear
 ```
 
+Compare with `diff -u test1-text1-filterdiff test1-text2-filterdiff`:
+
+```diff
+--- test1-text1-filterdiff
++++ test1-text2-filterdiff
+@@ -1,4 +1,4 @@
+ apple
+-banana 123
++banana 456
+ orange
+-papaia
++pear
+```
+
 ## Sequences
 
 ### Summarize matched bytes in file
