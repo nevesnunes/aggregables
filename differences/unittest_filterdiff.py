@@ -15,3 +15,14 @@ class Tests(unittest.TestCase):
             expected_diffs = [x.rstrip() for x in f3.readlines()]
         diffs = compute_diffs(rules, text1, text2)
         self.assertListEqual(diffs, expected_diffs)
+
+    def test_2_rules(self):
+        rules = ["(1+)", "(2+)"]
+        with open("test2-text1-filterdiff", "r") as f1:
+            text1 = f1.read().strip()
+        with open("test2-text2-filterdiff", "r") as f2:
+            text2 = f2.read().strip()
+        with open("test2-expected-filterdiff", "r") as f3:
+            expected_diffs = [x.rstrip() for x in f3.readlines()]
+        diffs = compute_diffs(rules, text1, text2)
+        self.assertListEqual(diffs, expected_diffs)
