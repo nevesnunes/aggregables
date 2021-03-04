@@ -480,6 +480,114 @@ Compare with `diff -u test1-text1-filterdiff test1-text2-filterdiff`:
 +pear
 ```
 
+Example (`strace` diff):
+
+Consider the following diff between 2 programs:
+
+```diff
+--- loops.c
++++ loops.with_access.c
+@@ -1,5 +1,6 @@
+ #include "stdio.h"
+ #include "stdlib.h"
++#include "unistd.h"
+
+ void output(char *msg) { printf("%s\n", msg); }
+
+@@ -16,5 +17,6 @@
+             }
+         }
+     }
++    access("/tmp/1", F_OK);
+     printf("%d", k);
+ }
+```
+
+Usage (filtering out any hex or decimal numbers):
+
+```bash
+./filterdiff.py \
+  <(printf '%s\n' '((0x[0-9a-f]+)|([0-9]+))') \
+  <(strace ./loops 2>&1 | sort -u) \
+  <(strace ./loops.with_access 2>&1 | sort -u)
+```
+
+Output:
+
+```diff
+--- base
++++ derivative
+@@ -1,12 +1,13 @@
+ 28) = 304
+ access("/etc/ld.so.preload", R_OK)      = -1 ENOENT (No such file or directory)
++access("/tmp/1", F_OK)                  = 0
+ arch_prctl(0x3001 /* ARCH_??? */, 0x7fff943f5cc0) = -1 EINVAL (Invalid argument)
+ arch_prctl(ARCH_SET_FS, 0x7fb1cd9e9540) = 0
+ brk(0x118b000)                          = 0x118b000
+ brk(NULL)                               = 0x116a000
+ brk(NULL)                               = 0x118b000
+ close(3)                                = 0
+-execve("./loops", ["./loops"], 0x7fff3350eb00 /* 119 vars */) = 0
++execve("./loops.with_access", ["./loops.with_access"], 0x7ffcfe61feb0 /* 119 vars */) = 0
+ +++ exited with 0 +++
+ exit_group(0)                           = ?
+ fstat(1, {st_mode=S_IFIFO|0600, st_size=0, ...}) = 0
+```
+
+Compare with `diff -u <(strace ./loops 2>&1 | sort -u) <(strace ./loops.with_access 2>&1 | sort -u)`:
+
+```diff
+--- /proc/self/fd/11	2021-03-04 09:00:58.068761187 +0000
++++ /proc/self/fd/13	2021-03-04 09:00:58.069761198 +0000
+@@ -1,29 +1,30 @@
+ 28) = 304
+ access("/etc/ld.so.preload", R_OK)      = -1 ENOENT (No such file or directory)
+-arch_prctl(0x3001 /* ARCH_??? */, 0x7ffc5e62e920) = -1 EINVAL (Invalid argument)
+-arch_prctl(ARCH_SET_FS, 0x7f76fbd8b540) = 0
+-brk(0xdd7000)                           = 0xdd7000
+-brk(NULL)                               = 0xdb6000
+-brk(NULL)                               = 0xdd7000
++access("/tmp/1", F_OK)                  = 0
++arch_prctl(0x3001 /* ARCH_??? */, 0x7ffe11326df0) = -1 EINVAL (Invalid argument)
++arch_prctl(ARCH_SET_FS, 0x7f0aa1ec1540) = 0
++brk(0x1b4b000)                          = 0x1b4b000
++brk(NULL)                               = 0x1b2a000
++brk(NULL)                               = 0x1b4b000
+ close(3)                                = 0
+-execve("./loops", ["./loops"], 0x7ffc4a29ea20 /* 119 vars */) = 0
++execve("./loops.with_access", ["./loops.with_access"], 0x7ffe745a6fc0 /* 119 vars */) = 0
+ +++ exited with 0 +++
+ exit_group(0)                           = ?
+ fstat(1, {st_mode=S_IFIFO|0600, st_size=0, ...}) = 0
+ fstat(3, {st_mode=S_IFREG|0644, st_size=301428, ...}) = 0
+ fstat(3, {st_mode=S_IFREG|0755, st_size=3183216, ...}) = 0
+ if
+-mmap(0x7f76fbbe5000, 1376256, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x25000) = 0x7f76fbbe5000
+-mmap(0x7f76fbd35000, 307200, PROT_READ, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x175000) = 0x7f76fbd35000
+-mmap(0x7f76fbd80000, 24576, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x1bf000) = 0x7f76fbd80000
+-mmap(0x7f76fbd86000, 13160, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0) = 0x7f76fbd86000
+-mmap(NULL, 1872744, PROT_READ, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x7f76fbbc0000
+-mmap(NULL, 301428, PROT_READ, MAP_PRIVATE, 3, 0) = 0x7f76fbd8c000
+-mmap(NULL, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7f76fbd8a000
++mmap(0x7f0aa1d1b000, 1376256, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x25000) = 0x7f0aa1d1b000
++mmap(0x7f0aa1e6b000, 307200, PROT_READ, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x175000) = 0x7f0aa1e6b000
++mmap(0x7f0aa1eb6000, 24576, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x1bf000) = 0x7f0aa1eb6000
++mmap(0x7f0aa1ebc000, 13160, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0) = 0x7f0aa1ebc000
++mmap(NULL, 1872744, PROT_READ, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x7f0aa1cf6000
++mmap(NULL, 301428, PROT_READ, MAP_PRIVATE, 3, 0) = 0x7f0aa1ec2000
++mmap(NULL, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7f0aa1ec0000
+ mprotect(0x403000, 4096, PROT_READ)     = 0
+-mprotect(0x7f76fbd80000, 12288, PROT_READ) = 0
+-mprotect(0x7f76fbe02000, 4096, PROT_READ) = 0
+-munmap(0x7f76fbd8c000, 301428)          = 0
++mprotect(0x7f0aa1eb6000, 12288, PROT_READ) = 0
++mprotect(0x7f0aa1f38000, 4096, PROT_READ) = 0
++munmap(0x7f0aa1ec2000, 301428)          = 0
+ openat(AT_FDCWD, "/etc/ld.so.cache", O_RDONLY|O_CLOEXEC) = 3
+ openat(AT_FDCWD, "/lib64/libc.so.6", O_RDONLY|O_CLOEXEC) = 3
+ pread64(3, "\4\0\0\0 \0\0\0\5\0\0\0GNU\0\1\0\0\300\4\0\0\0\330\1\0\0\0\0\0\0"..., 48, 848) = 48
+```
+
 ## Sequences
 
 ### Summarize matched bytes in file
