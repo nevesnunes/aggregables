@@ -1,5 +1,6 @@
 #include "stdio.h"
 #include "stdlib.h"
+#include "unistd.h"
 
 void output(char *msg) { printf("%s\n", msg); }
 
@@ -16,5 +17,6 @@ int main() {
             }
         }
     }
+    access("/tmp/1", F_OK);
     printf("%d", k);
 }
