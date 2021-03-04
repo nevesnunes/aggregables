@@ -4,24 +4,30 @@ Snippets and scripts to parse and manipulate data patterns. These are categorize
 
 <!-- toc -->
 
-- [Time Series](#time-series)
-  * [Compare deviations of two time spans in logs, grouped by captured variables](#compare-deviations-of-two-time-spans-in-logs-grouped-by-captured-variables)
-  * [Sort logs by timestamps, including non-timestamped lines](#sort-logs-by-timestamps-including-non-timestamped-lines)
-- [Captures](#captures)
-  * [Visualize co-occurrences](#visualize-co-occurrences)
-  * [Histogram](#histogram)
-  * [Line chart](#line-chart)
-  * [Proximity search for two or more substrings](#proximity-search-for-two-or-more-substrings)
-  * [Trace patterns while preserving full output](#trace-patterns-while-preserving-full-output)
-- [Differences](#differences)
-  * [Summarize distinct bytes in two files](#summarize-distinct-bytes-in-two-files)
-  * [Trace changes in variables](#trace-changes-in-variables)
-  * [Apply ignore filters to output](#apply-ignore-filters-to-output)
-- [Sequences](#sequences)
-  * [Summarize matched bytes in file](#summarize-matched-bytes-in-file)
-  * [Filter out repeated k-line patterns in a plaintext stream](#filter-out-repeated-k-line-patterns-in-a-plaintext-stream)
-  * [Find longest k-repeating substrings in byte stream](#find-longest-k-repeating-substrings-in-byte-stream)
-  * [Colorize contiguous longest k-repeating substrings](#colorize-contiguous-longest-k-repeating-substrings)
+  * [Time Series](#time-series)
+    + [Compare deviations of two time spans in logs, grouped by captured variables](#compare-deviations-of-two-time-spans-in-logs-grouped-by-captured-variables)
+    + [Sort logs by timestamps, including non-timestamped lines](#sort-logs-by-timestamps-including-non-timestamped-lines)
+  * [Captures](#captures)
+    + [Visualize co-occurrences](#visualize-co-occurrences)
+    + [Histogram](#histogram)
+    + [Small multiple charts](#small-multiple-charts)
+      - [Example: Side-Channel Statistical Analysis](#example-side-channel-statistical-analysis)
+    + [Line chart](#line-chart)
+      - [Example: Instruction trace of an executable](#example-instruction-trace-of-an-executable)
+    + [Proximity search for two or more substrings](#proximity-search-for-two-or-more-substrings)
+    + [Trace patterns while preserving full output](#trace-patterns-while-preserving-full-output)
+      - [Example: matches `1`, flushing output on each match](#example-matches-1-flushing-output-on-each-match)
+  * [Differences](#differences)
+    + [Summarize distinct bytes in two files](#summarize-distinct-bytes-in-two-files)
+    + [Trace changes in variables](#trace-changes-in-variables)
+    + [Apply ignore filters to output](#apply-ignore-filters-to-output)
+      - [Example: `strace` diff](#example-strace-diff)
+  * [Sequences](#sequences)
+    + [Summarize matched bytes in file](#summarize-matched-bytes-in-file)
+    + [Filter out repeated k-line patterns in a plaintext stream](#filter-out-repeated-k-line-patterns-in-a-plaintext-stream)
+    + [Find longest k-repeating substrings in byte stream](#find-longest-k-repeating-substrings-in-byte-stream)
+    + [Colorize contiguous longest k-repeating substrings](#colorize-contiguous-longest-k-repeating-substrings)
+- [TODO](#todo)
 
 <!-- tocstop -->
 
@@ -161,7 +167,7 @@ Caption:
 |`u`|counts > max_counts / 4|
 |`.`|counts > 0|
 
-Alternatives: 
+Alternatives:
 
 - 2D data: [matplotlib/heatmap.py](./captures/matplotlib/heatmap.py)
 - 1D data shaped as 2D: [matplotlib/heatmap-sequence.py](./captures/matplotlib/heatmap-sequence.py)
@@ -209,31 +215,40 @@ Output (occurrences, distribution, value):
 1 |       == 0.20 | 3
 ```
 
-Alternatives: 
+Alternatives:
 
 - Single chart: [matplotlib/bar.py](./captures/matplotlib/bar.py)
     - Usage: `./bar.py 1.csv`
-- Small multiple charts: [matplotlib/multiple_bar.py](./captures/matplotlib/multiple_bar.py)
-    - Usage: `paste -d ',' 1.csv 3.csv 12.csv | ./multiple_bar.py`
-    - Output: [pdf](./captures/matplotlib/output-multiple_bar.pdf)
-    - Interpolates bar color to make value differences across multiple scales more explicit
-    - Sorts by [Tukey's fences](https://en.wikipedia.org/wiki/Outlier#Tukey's_fences) and standard deviation for faster detection of anomalies
-    - Outputs to pdf to handle large numbers of charts
 
-Related work: 
+Related work:
 
 - [GitHub \- bitly/data\_hacks: Command line utilities for data analysis](https://github.com/bitly/data_hacks)
 - [GitHub \- wizzat/distribution: Short, simple, direct scripts for creating ASCII graphical histograms in the terminal\.](https://github.com/wizzat/distribution)
 - [Edward Tufte forum: Sparkline theory and practice](http://www.edwardtufte.com/bboard/q-and-a-fetch-msg?msg_id=0001OR&topic_id=1)
     - [Wicked Cool Usage · holman/spark Wiki · GitHub](https://github.com/holman/spark/wiki/Wicked-Cool-Usage)
 
+### Small multiple charts
+
+- [multiple_bar.py](./captures/matplotlib/multiple_bar.py)
+  - Interpolates bar color to make value differences across multiple scales more explicit
+  - Sorts by [Tukey's fences](https://en.wikipedia.org/wiki/Outlier#Tukey's_fences) and standard deviation for faster detection of anomalies
+  - Outputs to pdf to handle large numbers of charts
+
+Usage: `paste -d ',' 1.csv 3.csv 12.csv | ./multiple_bar.py`
+
+Output: [pdf](./captures/matplotlib/output-multiple_bar.pdf)
+
+#### Example: Side-Channel Statistical Analysis
+
+- [Article](https://nevesnunes.github.io/blog/2021/01/31/Side-Channel-Statistical-Analysis.html)
+
 ### Line chart
 
 - [line.py](./captures/matplotlib/line.py)
 
-Example (instruction trace of an executable):
+#### Example: Instruction trace of an executable
 
-- Source code: [loops.c](./sequences/loops.c)
+- [Source code](./sequences/loops.c)
   - This program takes the "else" branch in the first iteration, then the "if" branch in the remaining iterations. We can observe in the line chart that there are two blocks of repeated patterns, with the second block taking significantly more instructions.
 
 ```bash
@@ -250,8 +265,8 @@ match($0, /^0x4[0-9a-f]+/) {
 ' instrace.loops.log \
   > instrace-filtered.loops.log
 
-# Add csv header, 
-# convert hex values to integers, 
+# Add csv header,
+# convert hex values to integers,
 # then format label values back to hex
 cat \
   <(echo "foo") \
@@ -306,7 +321,7 @@ test1:12:was quick
 
 ### Trace patterns while preserving full output
 
-Example (matches `1`, flushing output on each match):
+#### Example: matches `1`, flushing output on each match
 
 ```bash
 (echo 1 && sleep 1 && echo 1 && sleep 1 && echo 2) \
@@ -334,7 +349,7 @@ Alternatives:
 Benchmarking:
 
 ```bash
-# Given: 
+# Given:
 # - CPU: Intel i5-4200U
 # - RAM: 12GiB DDR3 1600 MT/s
 # - Input: 2 files with size ~= 481M
@@ -480,7 +495,7 @@ Compare with `diff -u test1-text1-filterdiff test1-text2-filterdiff`:
 +pear
 ```
 
-Example (`strace` diff):
+#### Example: `strace` diff
 
 Consider the following diff between 2 programs:
 
@@ -604,7 +619,7 @@ Usage:
 ./hexmatch.py <(printf '%s\n' foo bar) $(printf '%s' o | xxd -p)
 
 # little-endian
-hexmatch.py <(printf '%s\n' DCBA) $(printf '%s' BC | xxd -p) -e le                                 
+hexmatch.py <(printf '%s\n' DCBA) $(printf '%s' BC | xxd -p) -e le
 
 # up to off-by-2 values
 hexmatch.py <(printf '%s\n' AAA BBB ZZZ) $(printf '%s' C | xxd -p) -k 2
