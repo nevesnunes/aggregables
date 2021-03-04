@@ -275,7 +275,9 @@ cat \
   | ./line.py --hex
 ```
 
-Output: [image](./captures/matplotlib/line.png)
+Output: 
+
+![image](./captures/matplotlib/line.png)
 
 ### Proximity search for two or more substrings
 
