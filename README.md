@@ -249,7 +249,8 @@ Output: [pdf](./captures/matplotlib/output-multiple_bar.pdf)
 #### Example: Instruction trace of an executable
 
 - [Source code](./sequences/loops.c)
-  - This program takes the "else" branch in the first iteration, then the "if" branch in the remaining iterations. We can observe in the line chart that there are two blocks of repeated patterns, with the second block taking significantly more instructions.
+  
+This program takes the "else" branch in the first iteration, then the "if" branch in the remaining iterations. We can observe in the line chart that there are two blocks of repeated patterns, with the second block taking significantly more instructions.
 
 ```bash
 # Generate trace file `instrace.loops.log`
