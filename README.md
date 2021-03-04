@@ -603,6 +603,27 @@ Compare with `diff -u <(strace ./loops 2>&1 | sort -u) <(strace ./loops.with_acc
  pread64(3, "\4\0\0\0 \0\0\0\5\0\0\0GNU\0\1\0\0\300\4\0\0\0\330\1\0\0\0\0\0\0"..., 48, 848) = 48
 ```
 
+Compare with `diff -u <(strace ./loops 2>&1 | sed 's/\(0x[0-9a-f]\+\)\|\([0-9]\+\)/_/g' | sort -u) <(strace ./loops.with_access 2>&1 | sed 's/\(0x[0-9a-f]\+\)\|\([0-9]\+\)/_/g' | sort -u)` (loss of original context, e.g. name of accessed file):
+
+```diff
+--- /proc/self/fd/11    2021-03-04 09:20:23.754515183 +0000
++++ /proc/self/fd/12    2021-03-04 09:20:23.755515196 +0000
+@@ -1,11 +1,12 @@
+ _) = _
+ access("/etc/ld.so.preload", R_OK)      = -_ ENOENT (No such file or directory)
++access("/tmp/_", F_OK)                  = _
+ arch_prctl(_ /* ARCH_??? */, _) = -_ EINVAL (Invalid argument)
+ arch_prctl(ARCH_SET_FS, _) = _
+ brk(_)                           = _
+ brk(NULL)                               = _
+ close(_)                                = _
+-execve("./loops", ["./loops"], _ /* _ vars */) = _
++execve("./loops.with_access", ["./loops.with_access"], _ /* _ vars */) = _
+ +++ exited with _ +++
+ exit_group(_)                           = ?
+ fstat(_, {st_mode=S_IFIFO|_, st_size=_, ...}) = _
+```
+
 ## Sequences
 
 ### Summarize matched bytes in file
