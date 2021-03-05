@@ -630,12 +630,12 @@ Compare with `diff -u <(strace ./loops 2>&1 | sed 's/\(0x[0-9a-f]\+\)\|\([0-9]\+
 
 #### Example: function dissassembly diff between 2 executables
 
-- [funcdiff_cli.py](./differences/funcdiff_cli.py)
+- [funcdiff_tui.py](./differences/funcdiff_tui.py)
 
 Input:
 
 ```bash
-./funcdiff_cli.py ./sequences/loops ./sequences/loops.with_access
+./funcdiff_tui.py ./sequences/loops ./sequences/loops.with_access
 ```
 
 Output (interactive interface with preview for function diffs, entries sorted by similarity ratio):

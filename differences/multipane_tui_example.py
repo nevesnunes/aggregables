@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 
-from multidiff_cli import MultiDiff
+from multipane_tui import MultiPane
 
 
 def get_text(lineno):
     return f"@{lineno}"
 
 
-md = MultiDiff("1\n2\n3", get_text)
+md = MultiPane("1\n2\n3", get_text)
 md.run()

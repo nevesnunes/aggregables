@@ -17,7 +17,7 @@ def exit_(event):
     event.app.exit()
 
 
-class MultiDiff:
+class MultiPane:
     def __init__(self, entries, callback):
         self.entries = entries
         self.max_entry_width = min(max(map(lambda x: len(x), entries.split("\n"))), 48)
