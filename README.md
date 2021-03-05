@@ -635,7 +635,7 @@ Compare with `diff -u <(strace ./loops 2>&1 | sed 's/\(0x[0-9a-f]\+\)\|\([0-9]\+
 Input:
 
 ```bash
-./funcdiff_tui.py ./sequences/loops ./sequences/loops.with_access
+./funcdiff_tui.py ../sequences/loops ../sequences/loops.with_access
 ```
 
 Output (interactive interface with preview for function diffs, offsets don't contribute to the diff, entries sorted by similarity ratio):

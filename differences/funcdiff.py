@@ -19,7 +19,8 @@ def parse_functions(filename):
 
         instructions = []
         opcodes = []
-        # FIXME: Consider `pdrj`
+        # FIXME: Consider `pdrj` for non-linear obfuscated functions
+        # - [radare2 disassembly commands doesn&\#39;t work properly\. · Issue \#11325 · radareorg/radare2 · GitHub](https://github.com/radareorg/radare2/issues/11325)
         for ins in r2p.cmdj(f"pdfj @{f['offset']}")["ops"]:
             instructions.append(f"{hex(ins['offset'])} {ins['disasm']}")
             opcodes.append(ins["disasm"].split()[0])
