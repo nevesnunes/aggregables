@@ -21,7 +21,7 @@ def parse_functions(filename):
         opcodes = []
         # FIXME: Consider `pdrj`
         for ins in r2p.cmdj(f"pdfj @{f['offset']}")["ops"]:
-            instructions.append(ins["disasm"])
+            instructions.append(f"{hex(ins['offset'])} {ins['disasm']}")
             opcodes.append(ins["disasm"].split()[0])
         parsed_functions.append(
             {

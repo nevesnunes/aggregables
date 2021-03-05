@@ -17,6 +17,30 @@ def exit_(event):
     event.app.exit()
 
 
+@kb.add("j")
+def down_(event):
+    if event.current_buffer.name == "entries":
+        event.current_buffer.cursor_down()
+
+
+@kb.add("k")
+def up_(event):
+    if event.current_buffer.name == "entries":
+        event.current_buffer.cursor_up()
+
+
+@kb.add("h")
+def left_(event):
+    if event.current_buffer.name == "entries":
+        event.current_buffer.cursor_left()
+
+
+@kb.add("l")
+def right_(event):
+    if event.current_buffer.name == "entries":
+        event.current_buffer.cursor_right()
+
+
 class MultiPane:
     def __init__(self, entries, callback):
         self.entries = entries
@@ -27,6 +51,7 @@ class MultiPane:
         self.entries_control = BufferControl(
             buffer=Buffer(
                 document=Document(self.entries, 0),
+                name="entries",
                 on_cursor_position_changed=self.update,
                 read_only=True,
             )
