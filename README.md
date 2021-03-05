@@ -642,6 +642,11 @@ Output (interactive interface with preview for function diffs, offsets don't con
 
 ![image](./differences/funcdiff_loops.png)
 
+References:
+
+- [Using Version Tracking to Diff a LibPNG Update \- threatrack.de](https://blog.threatrack.de/2019/10/02/ghidra-patch-diff/)
+- [Patch Diffing with Ghidra \- Low\-level Shenanigans](https://ihack4falafel.github.io/Patch-Diffing-with-Ghidra/)
+
 ## Sequences
 
 ### Summarize matched bytes in file
