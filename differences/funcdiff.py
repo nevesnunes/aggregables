@@ -46,7 +46,7 @@ def compute_best_matches(filename1, filename2):
         for pf2 in parsed_functions_2:
             if pf1 == pf2:
                 continue
-            pf1_r = ratio.compute_ratio(pf1["opcodes"], pf2["opcodes"])
+            pf1_r = ratio.compute_similarity(pf1["opcodes"], pf2["opcodes"])
             if best_pf1_r < pf1_r:
                 best_pf1_r = pf1_r
                 picked_pf2 = pf2

@@ -4,7 +4,7 @@ from typing import List
 import sys
 
 
-def compute_ratio(input_text1: List[str], input_text2: List[str]) -> float:
+def compute_similarity(input_text1: List[str], input_text2: List[str]) -> float:
     max_len = max(len(input_text1), len(input_text2))
     text1 = input_text1[:]
     text1 += "\n" * (max_len - len(input_text1))
@@ -38,4 +38,4 @@ if __name__ == "__main__":
     with open(sys.argv[2], "r") as f2:
         text2 = f2.readlines()
 
-    print(compute_ratio(text1, text2))
+    print(compute_similarity(text1, text2))
