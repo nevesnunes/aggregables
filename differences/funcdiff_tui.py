@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from multidiff_cli import MultiDiff
+from multipane_tui import MultiPane
 import funcdiff
 import sys
 
@@ -10,7 +10,7 @@ def get_text(lineno):
 
 
 bms = funcdiff.compute_best_matches(sys.argv[1], sys.argv[2])
-md = MultiDiff(
+md = MultiPane(
     "\n".join([funcdiff.ratio_summary(bm, bms["width"]) for bm in bms["matches"]]),
     get_text,
 )
