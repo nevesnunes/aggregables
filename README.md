@@ -22,6 +22,7 @@ Snippets and scripts to parse and manipulate data patterns. These are categorize
     + [Trace changes in variables](#trace-changes-in-variables)
     + [Apply ignore filters to output](#apply-ignore-filters-to-output)
       - [Example: `strace` diff](#example-strace-diff)
+      - [Example: function dissassembly diff between 2 executables](#example-function-dissassembly-diff-between-2-executables)
   * [Sequences](#sequences)
     + [Summarize matched bytes in file](#summarize-matched-bytes-in-file)
     + [Filter out repeated k-line patterns in a plaintext stream](#filter-out-repeated-k-line-patterns-in-a-plaintext-stream)
