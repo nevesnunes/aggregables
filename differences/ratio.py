@@ -1,16 +1,15 @@
 #!/usr/bin/env python3
 
+from typing import List
 import sys
 
-if __name__ == "__main__":
-    with open(sys.argv[1], "r") as f1:
-        text1 = f1.readlines()
-    with open(sys.argv[2], "r") as f2:
-        text2 = f2.readlines()
 
-    max_len = max(len(text1), len(text2))
-    text1 += "\n" * (max_len - len(text1))
-    text2 += "\n" * (max_len - len(text2))
+def compute_ratio(input_text1: List[str], input_text2: List[str]) -> float:
+    max_len = max(len(input_text1), len(input_text2))
+    text1 = input_text1[:]
+    text1 += "\n" * (max_len - len(input_text1))
+    text2 = input_text2[:]
+    text2 += "\n" * (max_len - len(input_text2))
 
     total = 0
     occurrences = {}
@@ -30,4 +29,13 @@ if __name__ == "__main__":
     for k, v in occurrences.items():
         total_v += abs(v)
 
-    print(1 - round(total_v / total, 2))
+    return 1 - round(total_v / total, 2)
+
+
+if __name__ == "__main__":
+    with open(sys.argv[1], "r") as f1:
+        text1 = f1.readlines()
+    with open(sys.argv[2], "r") as f2:
+        text2 = f2.readlines()
+
+    print(compute_ratio(text1, text2))

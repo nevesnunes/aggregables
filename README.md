@@ -627,6 +627,20 @@ Compare with `diff -u <(strace ./loops 2>&1 | sed 's/\(0x[0-9a-f]\+\)\|\([0-9]\+
  fstat(_, {st_mode=S_IFIFO|_, st_size=_, ...}) = _
 ```
 
+#### Example: function dissassembly diff between 2 executables
+
+- [funcdiff_cli.py](./differences/funcdiff_cli.py)
+
+Input:
+
+```bash
+./funcdiff_cli.py ./sequences/loops ./sequences/loops.with_access
+```
+
+Output (interactive interface with preview for function diffs, entries sorted by similarity ratio):
+
+![image](./differences/funcdiff_loops.png)
+
 ## Sequences
 
 ### Summarize matched bytes in file
