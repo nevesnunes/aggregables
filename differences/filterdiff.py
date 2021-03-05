@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from typing import Any, Dict, List
 import difflib
 import os
 import re
@@ -13,14 +14,50 @@ else:
     REPLACE_STR = "\x00"
 
 
-def debug(*args, indent=0):
+def debug(*args: Any, indent: int = 0) -> None:
     if DEBUG:
         print(" " * indent, args)
 
 
-def compute_replacements(patterns, texts):
+try:
+    import colorama
+
+    colorama.init()
+
+    def highlight(text):
+        if text[0] == "+":
+            return (
+                colorama.Fore.GREEN
+                + colorama.Style.BRIGHT
+                + str(text)
+                + colorama.Style.RESET_ALL
+            )
+        elif text[0] == "-":
+            return (
+                colorama.Fore.RED
+                + colorama.Style.BRIGHT
+                + str(text)
+                + colorama.Style.RESET_ALL
+            )
+        elif text[0] == "@":
+            return colorama.Style.BRIGHT + str(text) + colorama.Style.RESET_ALL
+        else:
+            return str(text)
+
+
+except ImportError:
+
+    def highlight(text):
+        return str(text)
+
+
+def compute_replacements(rules: List[str], texts: List[str]) -> Dict[int, Any]:
+    patterns = []
+    for rule in rules:
+        patterns.append(re.compile(rule.strip(), re.IGNORECASE | re.MULTILINE))
+
     replace_counter = 0
-    replacements = {}
+    replacements: Dict[int, Any] = {}
     pattern_replace_strs = {}
     for i, c in enumerate(texts):
         previous_text = c
@@ -30,7 +67,7 @@ def compute_replacements(patterns, texts):
             if not text_to_replace:
                 break
 
-            next_group = None
+            next_group = ""
             next_match = None
             next_match_start = float("inf")
             next_pattern = None
@@ -74,7 +111,7 @@ def compute_replacements(patterns, texts):
     return replacements
 
 
-def apply_replacements(replacements, texts):
+def apply_replacements(replacements: Dict[int, Any], texts: List[str]) -> List[str]:
     replaced_texts = []
     for i, c in enumerate(texts):
         text_to_replace = c
@@ -82,6 +119,13 @@ def apply_replacements(replacements, texts):
         if i in replacements:
             for match_dict in replacements[i]:
                 match = re.search(match_dict["pattern"], text_to_replace)
+                if not match:
+                    print(
+                        f"No match for pattern '{match_dict['pattern']}'",
+                        file=sys.stderr,
+                    )
+                    continue
+
                 replaced_end = match.start() + len(match_dict["replace_str"])
                 replaced_chunk = re.sub(
                     match_dict["group"], match_dict["replace_str"], text_to_replace, 1
@@ -100,13 +144,9 @@ def apply_replacements(replacements, texts):
     return replaced_texts
 
 
-def compute_diffs(rules, text1, text2):
-    patterns = []
-    for rule in rules:
-        patterns.append(re.compile(rule.strip(), re.IGNORECASE | re.MULTILINE))
-
+def compute_diffs(rules: List[str], text1: str, text2: str) -> List[str]:
     texts = [text1, text2]
-    replacements = compute_replacements(patterns, texts)
+    replacements = compute_replacements(rules, texts)
     replaced_texts = apply_replacements(replacements, texts)
 
     diffs = difflib.unified_diff(
@@ -138,7 +178,7 @@ def compute_diffs(rules, text1, text2):
     diffs = difflib.unified_diff(
         text1.split("\n"), new_text.split("\n"), fromfile="base", tofile="derivative",
     )
-    return list(map(lambda x: x.rstrip(), diffs))
+    return list(map(lambda x: highlight(x.rstrip()), diffs))
 
 
 if __name__ == "__main__":
