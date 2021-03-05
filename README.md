@@ -522,7 +522,7 @@ Consider the following diff between 2 programs:
  }
 ```
 
-Usage (filtering out any hex or decimal numbers):
+Input (filtering out any hex or decimal numbers):
 
 ```bash
 ./filterdiff.py \
