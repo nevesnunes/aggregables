@@ -638,7 +638,7 @@ Input:
 ./funcdiff_tui.py ./sequences/loops ./sequences/loops.with_access
 ```
 
-Output (interactive interface with preview for function diffs, entries sorted by similarity ratio):
+Output (interactive interface with preview for function diffs, offsets don't contribute to the diff, entries sorted by similarity ratio):
 
 ![image](./differences/funcdiff_loops.png)
 
