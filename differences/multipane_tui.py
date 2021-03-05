@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
 
+# TODO:
+# - Input prompt for search callback
+#     - [python\-prompt\-toolkit/calculator\.py at master · prompt\-toolkit/python\-prompt\-toolkit · GitHub](https://github.com/prompt-toolkit/python-prompt-toolkit/blob/master/examples/full-screen/calculator.py)
+#     - [Super simple inverted index in Python · GitHub](https://gist.github.com/HonzaKral/d90d344bca18ffa71139ac11b9f83124)
+
 # References:
 # - [How to pass formatted text to a buffer ? · Issue \#711 · prompt\-toolkit/python\-prompt\-toolkit · GitHub](https://github.com/prompt-toolkit/python-prompt-toolkit/issues/711)
 #     - [lira/widgets\.py](https://github.com/pythonecuador/lira/blob/92cb843981099a8230aa32f5dd7b26b26e2daa95/lira/tui/widgets.py#L71-L197)
