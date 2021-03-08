@@ -632,10 +632,35 @@ Compare with `diff -u <(strace ./loops 2>&1 | sed 's/\(0x[0-9a-f]\+\)\|\([0-9]\+
 
 - [funcdiff_tui.py](./differences/funcdiff_tui.py)
 
+Consider the following diff between 2 programs:
+
+```diff
+--- loops.c
++++ loops.with_access.with_unused.c
+@@ -1,5 +1,10 @@
+ #include "stdio.h"
+ #include "stdlib.h"
++#include "unistd.h"
++
++int unused() {
++    return 1;
++}
+ 
+ void output(char *msg) { printf("%s\n", msg); }
+ 
+@@ -16,5 +21,6 @@
+             }
+         }
+     }
++    access("/tmp/1", F_OK);
+     printf("%d", k);
+ }
+```
+
 Input:
 
 ```bash
-./funcdiff_tui.py ../sequences/loops ../sequences/loops.with_access
+./funcdiff_tui.py ../sequences/loops ../sequences/loops.with_access.with_unused
 ```
 
 Output (interactive interface with preview for function diffs, offsets don't contribute to the diff, entries sorted by similarity ratio):
