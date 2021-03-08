@@ -14,7 +14,9 @@ from prompt_toolkit.buffer import Buffer
 from prompt_toolkit.document import Document
 from prompt_toolkit.formatted_text import fragment_list_to_text, to_formatted_text
 from prompt_toolkit.key_binding import KeyBindings
-from prompt_toolkit.layout.containers import VSplit, Window
+from prompt_toolkit.key_binding.bindings.focus import focus_next, focus_previous
+from prompt_toolkit.widgets import SearchToolbar, TextArea
+from prompt_toolkit.layout.containers import HSplit, VSplit, Window
 from prompt_toolkit.layout.controls import BufferControl
 from prompt_toolkit.layout.layout import Layout
 from prompt_toolkit.layout.processors import (
@@ -23,9 +25,7 @@ from prompt_toolkit.layout.processors import (
     Transformation,
 )
 
-FOCUSABLE_CHILDREN_NAMES = ["entries", "preview"]
-FOCUSABLE_CHILDREN = [0, 2]
-FOCUSED_CHILD_IDX = 0
+MOTION_CHILD_NAMES = ["entries", "preview"]
 
 kb = KeyBindings()
 
@@ -38,35 +38,30 @@ def exit_(event):
 
 @kb.add("j")
 def down_(event):
-    if event.current_buffer.name in FOCUSABLE_CHILDREN_NAMES:
+    if event.current_buffer.name in MOTION_CHILD_NAMES:
         event.current_buffer.cursor_down()
 
 
 @kb.add("k")
 def up_(event):
-    if event.current_buffer.name in FOCUSABLE_CHILDREN_NAMES:
+    if event.current_buffer.name in MOTION_CHILD_NAMES:
         event.current_buffer.cursor_up()
 
 
 @kb.add("h")
 def left_(event):
-    if event.current_buffer.name in FOCUSABLE_CHILDREN_NAMES:
+    if event.current_buffer.name in MOTION_CHILD_NAMES:
         event.current_buffer.cursor_left()
 
 
 @kb.add("l")
 def right_(event):
-    if event.current_buffer.name in FOCUSABLE_CHILDREN_NAMES:
+    if event.current_buffer.name in MOTION_CHILD_NAMES:
         event.current_buffer.cursor_right()
 
 
-@kb.add("tab")
-def cycle_(event):
-    global FOCUSED_CHILD_IDX, FOCUSABLE_CHILDREN
-    FOCUSED_CHILD_IDX = (FOCUSED_CHILD_IDX + 1) % len(FOCUSABLE_CHILDREN)
-    focused_child_window_idx = FOCUSABLE_CHILDREN[FOCUSED_CHILD_IDX]
-    next_child = event.app.layout.container.children[focused_child_window_idx]
-    event.app.layout.focus(next_child)
+kb.add("tab")(focus_next)
+kb.add("s-tab")(focus_previous)
 
 
 class FormatTextProcessor(Processor):
@@ -124,9 +119,12 @@ class FormattedBufferControl(BufferControl):
 
 
 class MultiPane:
-    def __init__(self, entries, callback):
+    def __init__(self, entries, preview_callback=None, input_callback=None):
+        if not entries or len(entries) == 0:
+            raise RuntimeError("Entries cannot be empty.")
         self.entries = entries
-        self.callback = callback
+        self.input_callback = input_callback
+        self.preview_callback = preview_callback
 
         self.current_lineno = 1
         self.max_entry_width = min(max(map(lambda x: len(x), entries.split("\n"))), 48)
@@ -134,45 +132,71 @@ class MultiPane:
             buffer=Buffer(
                 document=Document(self.entries, 0),
                 name="entries",
-                on_cursor_position_changed=self.update,
+                on_cursor_position_changed=self.update_entries,
                 read_only=True,
             )
         )
-        self.preview_text = ANSI(self.callback(self.current_lineno))
-        formatted_text = to_formatted_text(self.preview_text)
-        plain_text = fragment_list_to_text(formatted_text)
-        self.preview_control = FormattedBufferControl(
-            buffer=Buffer(
-                document=Document(plain_text, 0),
-                name="preview",
-                on_cursor_position_changed=self.update_preview,
-                read_only=True,
-            ),
-            focusable=True,
-            formatted_text=formatted_text,
-            include_default_input_processors=False,
-            input_processors=[FormatTextProcessor(), HighlightSelectionProcessor()],
-        )
-        # Alternative (not scrollable):
-        # self.preview_control = FormattedTextControl(
-        #     focusable=True,
-        #     show_cursor=True,
-        #     text=ANSI(self.callback(self.current_lineno)),
-        # )
-        self.root_container = VSplit(
-            [
-                Window(
-                    content=self.entries_control,
-                    width=self.max_entry_width,
-                    wrap_lines=True,
+
+        if self.preview_callback:
+            self.preview_text = ANSI(self.preview_callback(self.current_lineno))
+            formatted_text = to_formatted_text(self.preview_text)
+            plain_text = fragment_list_to_text(formatted_text)
+            self.preview_control = FormattedBufferControl(
+                buffer=Buffer(
+                    document=Document(plain_text, 0),
+                    name="preview",
+                    on_cursor_position_changed=self.update_preview,
+                    read_only=True,
                 ),
-                Window(width=3, char=" | "),
-                Window(content=self.preview_control, wrap_lines=True),
-            ]
-        )
+                focusable=True,
+                formatted_text=formatted_text,
+                include_default_input_processors=False,
+                input_processors=[FormatTextProcessor(), HighlightSelectionProcessor()],
+            )
+            # Alternative (not scrollable):
+            # self.preview_control = FormattedTextControl(
+            #     focusable=True,
+            #     show_cursor=True,
+            #     text=ANSI(self.preview_callback(self.current_lineno)),
+            # )
+            entries_container = VSplit(
+                [
+                    Window(
+                        content=self.entries_control,
+                        width=self.max_entry_width,
+                        wrap_lines=True,
+                    ),
+                    Window(width=3, char=" | "),
+                    Window(content=self.preview_control, wrap_lines=True),
+                ]
+            )
+        else:
+            entries_container = Window(
+                content=self.entries_control,
+                width=self.max_entry_width,
+                wrap_lines=True,
+            )
+        if self.input_callback:
+            self.search_field = SearchToolbar()
+            self.input_field = TextArea(
+                accept_handler=self.input_accept,
+                height=1,
+                prompt="> ",
+                multiline=False,
+                wrap_lines=False,
+                search_field=self.search_field,
+            )
+            self.root_container = HSplit(
+                [entries_container, Window(height=1, char="-"), self.input_field,]
+            )
+        else:
+            self.root_container = entries_container
         self.layout = Layout(self.root_container)
 
         self.app = Application(full_screen=True, key_bindings=kb, layout=self.layout)
+
+    def input_accept(self, buffer):
+        self.input_callback(self.app, self.input_field.text)
 
     def get_lineno(self, text, pos):
         lineno = 1
@@ -185,14 +209,14 @@ class MultiPane:
         return lineno
 
     def update_preview(self, buffer):
-        self.update(self.entries_control.buffer)
+        self.update_entries(self.entries_control.buffer)
 
-    def update(self, buffer):
+    def update_entries(self, buffer):
         new_lineno = self.get_lineno(self.entries, buffer.cursor_position)
         if self.current_lineno != new_lineno:
             self.current_lineno = new_lineno
 
-            text = ANSI(self.callback(self.current_lineno))
+            text = ANSI(self.preview_callback(self.current_lineno))
             formatted_text = to_formatted_text(text)
             plain_text = fragment_list_to_text(formatted_text)
             self.preview_control.buffer.set_document(

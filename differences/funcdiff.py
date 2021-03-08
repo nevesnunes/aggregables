@@ -30,33 +30,108 @@ def parse_functions(filename):
                 "offset": f["offset"],
                 "instructions": instructions,
                 "opcodes": opcodes,
+                "hash": hash(tuple(opcodes)),
             }
         )
 
     return parsed_functions
 
 
-def compute_best_matches(filename1, filename2):
-    parsed_functions_1 = parse_functions(sys.argv[1])
-    parsed_functions_2 = parse_functions(sys.argv[2])
+def matches_from_functions(functions, opcode_hashes, reverse=False):
     best_matches = []
-    max_width = 0
-    for pf1 in parsed_functions_1:
-        best_pf1_r = 0
-        picked_pf2 = None
-        for pf2 in parsed_functions_2:
-            if pf1 == pf2:
+    for f1 in functions[0]:
+        best_f1_r = 0
+        picked_f2 = None
+        for f2 in functions[1]:
+            if f1 == f2:
                 continue
-            pf1_r = ratio.compute_similarity(pf1["opcodes"], pf2["opcodes"])
-            if best_pf1_r < pf1_r:
-                best_pf1_r = pf1_r
-                picked_pf2 = pf2
+            f1_r = ratio.compute_similarity(f1["opcodes"], f2["opcodes"])
+            if best_f1_r < f1_r:
+                best_f1_r = f1_r
+                picked_f2 = f2
+        if not picked_f2:
+            picked_f2 = {
+                "name": "[N/A]",
+                "offset": 0,
+                "instructions": [],
+                "opcodes": [],
+                "hash": hash(tuple([])),
+            }
+
+        if reverse:
+            first = picked_f2
+            second = f1
+        else:
+            first = f1
+            second = picked_f2
+
         best_matches.append(
-            {"ratio": round(best_pf1_r, 4), "first": pf1, "second": picked_pf2}
+            {"ratio": round(best_f1_r, 4), "first": first, "second": second}
         )
 
     best_matches = sorted(best_matches, key=lambda x: x["ratio"], reverse=True)
-    best_matches = list(filter(lambda x: x["ratio"] < 1.0, best_matches))
+    best_matches = list(
+        filter(
+            lambda x: x["ratio"] < 1.0
+            and (
+                not x["second"]["hash"] in opcode_hashes
+                or opcode_hashes[x["second"]["hash"]] != 0
+            ),
+            best_matches,
+        )
+    )
+
+    return best_matches
+
+
+def compute_best_matches(filename1, filename2):
+    parsed_functions_1 = parse_functions(sys.argv[1])
+    parsed_functions_2 = parse_functions(sys.argv[2])
+
+    # To avoid false positives due to functions in the first listing
+    # also existing in the second listing, track relative number of
+    # occurrences. This way, only functions exclusive to the second listing
+    # are persisted when filtering matches.
+    opcode_hashes = {}
+    for pf1 in parsed_functions_1:
+        pf1_hash = pf1["hash"]
+        if pf1_hash not in opcode_hashes:
+            opcode_hashes[pf1_hash] = 0
+        opcode_hashes[pf1_hash] += 1
+    for pf2 in parsed_functions_2:
+        pf2_hash = pf2["hash"]
+        if pf2_hash not in opcode_hashes:
+            opcode_hashes[pf2_hash] = 0
+        opcode_hashes[pf2_hash] -= 1
+    best_matches = matches_from_functions(
+        (parsed_functions_1, parsed_functions_2), opcode_hashes
+    )
+
+    # To include new functions from the second listing, we do a second pass,
+    # processing the unmatched functions of both listings from the first pass.
+    best_opcode_hashes = set()
+    for bm in best_matches:
+        best_opcode_hashes.add(bm["first"]["hash"])
+        best_opcode_hashes.add(bm["second"]["hash"])
+    distinct_functions_1 = list(
+        filter(
+            lambda x: x["hash"] not in best_opcode_hashes
+            and opcode_hashes[x["hash"]] != 0,
+            parsed_functions_1,
+        )
+    )
+    distinct_functions_2 = list(
+        filter(
+            lambda x: x["hash"] not in best_opcode_hashes
+            and opcode_hashes[x["hash"]] != 0,
+            parsed_functions_2,
+        )
+    )
+    best_matches += matches_from_functions(
+        (distinct_functions_2, distinct_functions_1), best_opcode_hashes, True
+    )
+
+    max_width = 0
     for bm in best_matches:
         max_width = max(len(bm["first"]["name"]), max_width)
 
@@ -72,9 +147,7 @@ def compute_diff(bm):
 
 
 def ratio_summary(bm, max_width):
-    return (
-        f"{bm['ratio']:6} | {bm['first']['name']:>{max_width}} | {bm['second']['name']}"
-    )
+    return f"{bm['ratio']:6} | {bm['first']['name']:>{max_width}} | {bm['second']['name']}"
 
 
 if __name__ == "__main__":
