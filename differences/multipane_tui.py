@@ -1,24 +1,35 @@
 #!/usr/bin/env python3
 
-# TODO:
-# - Input prompt for search callback
-#     - [python\-prompt\-toolkit/calculator\.py at master · prompt\-toolkit/python\-prompt\-toolkit · GitHub](https://github.com/prompt-toolkit/python-prompt-toolkit/blob/master/examples/full-screen/calculator.py)
-#     - [Super simple inverted index in Python · GitHub](https://gist.github.com/HonzaKral/d90d344bca18ffa71139ac11b9f83124)
-
 # References:
 # - [How to pass formatted text to a buffer ? · Issue \#711 · prompt\-toolkit/python\-prompt\-toolkit · GitHub](https://github.com/prompt-toolkit/python-prompt-toolkit/issues/711)
 #     - [lira/widgets\.py](https://github.com/pythonecuador/lira/blob/92cb843981099a8230aa32f5dd7b26b26e2daa95/lira/tui/widgets.py#L71-L197)
+# - [python\-prompt\-toolkit/calculator\.py at master · prompt\-toolkit/python\-prompt\-toolkit · GitHub](https://github.com/prompt-toolkit/python-prompt-toolkit/blob/master/examples/full-screen/calculator.py)
+# - [Python prompt\_toolkit: Pick best fuzzy match when the user presses enter \- Stack Overflow](https://stackoverflow.com/questions/61167987/python-prompt-toolkit-pick-best-fuzzy-match-when-the-user-presses-enter)
 
 from prompt_toolkit import Application, ANSI
+from prompt_toolkit.application.current import get_app
 from prompt_toolkit.buffer import Buffer
+from prompt_toolkit.completion import FuzzyWordCompleter
 from prompt_toolkit.document import Document
+from prompt_toolkit.filters import (
+    Condition,
+    has_completions,
+    completion_is_selected,
+)
 from prompt_toolkit.formatted_text import fragment_list_to_text, to_formatted_text
 from prompt_toolkit.key_binding import KeyBindings
 from prompt_toolkit.key_binding.bindings.focus import focus_next, focus_previous
 from prompt_toolkit.widgets import SearchToolbar, TextArea
-from prompt_toolkit.layout.containers import HSplit, VSplit, Window
+from prompt_toolkit.layout.containers import (
+    Float,
+    FloatContainer,
+    HSplit,
+    VSplit,
+    Window,
+)
 from prompt_toolkit.layout.controls import BufferControl
 from prompt_toolkit.layout.layout import Layout
+from prompt_toolkit.layout.menus import CompletionsMenu
 from prompt_toolkit.layout.processors import (
     HighlightSelectionProcessor,
     Processor,
@@ -27,41 +38,39 @@ from prompt_toolkit.layout.processors import (
 
 MOTION_CHILD_NAMES = ["entries", "preview"]
 
+
+@Condition
+def motion_filter() -> bool:
+    """
+    Enable when the current buffer is a motion child.
+    """
+    return get_app().current_buffer.name in MOTION_CHILD_NAMES
+
+
 kb = KeyBindings()
 
 
-@kb.add("c-c")
-@kb.add("q")
-def exit_(event):
-    event.app.exit()
+kb.add("tab", filter=motion_filter)(focus_next)
+kb.add("s-tab", filter=motion_filter)(focus_previous)
+kb.add("c-n")(focus_next)
+kb.add("c-p")(focus_previous)
+
+kb.add("j", filter=motion_filter)(lambda event: event.current_buffer.cursor_down())
+kb.add("k", filter=motion_filter)(lambda event: event.current_buffer.cursor_up())
+kb.add("h", filter=motion_filter)(lambda event: event.current_buffer.cursor_left())
+kb.add("l", filter=motion_filter)(lambda event: event.current_buffer.cursor_right())
+
+kb.add("c-c")(lambda event: event.app.exit())
+kb.add("q", filter=motion_filter)(lambda event: event.app.exit())
 
 
-@kb.add("j")
-def down_(event):
-    if event.current_buffer.name in MOTION_CHILD_NAMES:
-        event.current_buffer.cursor_down()
+completion_filter = has_completions & ~completion_is_selected
 
 
-@kb.add("k")
-def up_(event):
-    if event.current_buffer.name in MOTION_CHILD_NAMES:
-        event.current_buffer.cursor_up()
-
-
-@kb.add("h")
-def left_(event):
-    if event.current_buffer.name in MOTION_CHILD_NAMES:
-        event.current_buffer.cursor_left()
-
-
-@kb.add("l")
-def right_(event):
-    if event.current_buffer.name in MOTION_CHILD_NAMES:
-        event.current_buffer.cursor_right()
-
-
-kb.add("tab")(focus_next)
-kb.add("s-tab")(focus_previous)
+@kb.add("enter", filter=completion_filter)
+def completion_handle(event):
+    event.current_buffer.go_to_completion(0)
+    event.current_buffer.validate_and_handle()
 
 
 class FormatTextProcessor(Processor):
@@ -119,7 +128,13 @@ class FormattedBufferControl(BufferControl):
 
 
 class MultiPane:
-    def __init__(self, entries, preview_callback=None, input_callback=None):
+    def __init__(
+        self,
+        entries,
+        preview_callback=None,
+        input_callback=None,
+        input_completions=None,
+    ):
         if not entries or len(entries) == 0:
             raise RuntimeError("Entries cannot be empty.")
         self.entries = entries
@@ -180,15 +195,27 @@ class MultiPane:
             self.search_field = SearchToolbar()
             self.input_field = TextArea(
                 accept_handler=self.input_accept,
+                completer=FuzzyWordCompleter(list(input_completions)),
+                complete_while_typing=True,
                 height=1,
-                prompt="> ",
                 multiline=False,
-                wrap_lines=False,
+                prompt="> ",
                 search_field=self.search_field,
+                wrap_lines=False,
             )
-            self.root_container = HSplit(
-                [entries_container, Window(height=1, char="-"), self.input_field,]
+            self.root_container = FloatContainer(
+                content=HSplit(
+                    [entries_container, Window(height=1, char="-"), self.input_field,]
+                ),
+                floats=[
+                    Float(
+                        content=CompletionsMenu(max_height=16, scroll_offset=1),
+                        xcursor=True,
+                        ycursor=True,
+                    )
+                ],
             )
+
         else:
             self.root_container = entries_container
         self.layout = Layout(self.root_container)
@@ -196,7 +223,7 @@ class MultiPane:
         self.app = Application(full_screen=True, key_bindings=kb, layout=self.layout)
 
     def input_accept(self, buffer):
-        self.input_callback(self.app, self.input_field.text)
+        self.input_callback(self.input_field.text)
 
     def get_lineno(self, text, pos):
         lineno = 1
@@ -211,9 +238,9 @@ class MultiPane:
     def update_preview(self, buffer):
         self.update_entries(self.entries_control.buffer)
 
-    def update_entries(self, buffer):
+    def update_entries(self, buffer, force=False):
         new_lineno = self.get_lineno(self.entries, buffer.cursor_position)
-        if self.current_lineno != new_lineno:
+        if force or self.current_lineno != new_lineno:
             self.current_lineno = new_lineno
 
             text = ANSI(self.preview_callback(self.current_lineno))
@@ -225,6 +252,13 @@ class MultiPane:
             self.preview_control.formatted_lines = self.preview_control.parse_formatted_text(
                 formatted_text
             )
+
+    def replace_entries(self, entries):
+        self.current_lineno = 1
+        self.entries_control.buffer.set_document(
+            Document(entries, 0), bypass_readonly=True
+        )
+        self.update_entries(self.entries_control.buffer, True)
 
     def run(self):
         self.app.run()
