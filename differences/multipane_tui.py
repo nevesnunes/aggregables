@@ -50,8 +50,8 @@ def motion_filter() -> bool:
 kb = KeyBindings()
 
 
-kb.add("tab", filter=motion_filter)(focus_next)
-kb.add("s-tab", filter=motion_filter)(focus_previous)
+kb.add("tab")(focus_next)
+kb.add("s-tab")(focus_previous)
 kb.add("c-n")(focus_next)
 kb.add("c-p")(focus_previous)
 
@@ -71,6 +71,19 @@ completion_filter = has_completions & ~completion_is_selected
 def completion_handle(event):
     event.current_buffer.go_to_completion(0)
     event.current_buffer.validate_and_handle()
+
+
+@kb.add("c-space")
+def completion_start(event):
+    """
+    Start auto completion. If the menu is showing already, select the next
+    completion.
+    """
+    b = event.app.current_buffer
+    if b.complete_state:
+        b.complete_next()
+    else:
+        b.start_completion(select_first=False)
 
 
 class FormatTextProcessor(Processor):

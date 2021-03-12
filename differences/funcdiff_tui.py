@@ -73,13 +73,12 @@ for i, bm in enumerate(bms["matches"]):
     )
 index = ReverseIndex(
     index_data,
-    {},
-    "first_name",
-    "second_name",
-    "first_instructions",
-    "second_instructions",
+    not_regexes=["^((0x[0-9a-f]+)|([0-9]+))$"],
+    fields=["first_name", "second_name", "first_instructions", "second_instructions",],
 )
 
-entries = "\n".join([funcdiff.ratio_summary(bm, bms["width"]) for bm in current_matches])
+entries = "\n".join(
+    [funcdiff.ratio_summary(bm, bms["width"]) for bm in current_matches]
+)
 md = MultiPane(entries, get_text, handle_input, index.words)
 md.run()

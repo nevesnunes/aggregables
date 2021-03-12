@@ -20,7 +20,7 @@ DATA = [
 SYNONYMS = {
     "rapid": "quick",
 }
-index = ReverseIndex(DATA, SYNONYMS, "title", "description")
+index = ReverseIndex(DATA, SYNONYMS, fields=["title", "description"])
 print(index.index)
 print(list(index.query("Python")))
 print(list(index.query("Python", fields=["title"])))
