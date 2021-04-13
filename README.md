@@ -760,6 +760,25 @@ b'!"'
 3
 ```
 
+Alternatives (with filter for numeric patterns): `./reducer_tui.py test-reducer1 <(printf '%s\n' '([0-9]+)')`
+
+Input (`test-reducer1` file contents):
+
+```
+xyz
+abc
+abc
+foo 123
+bar baz
+foo 456
+bar baz
+123
+```
+
+Output (interactive interface with preview for expanded unfiltered substrings):
+
+![image](./aggregables/sequences/reducer_tui.png)
+
 Related work:
 
 - https://pypi.org/project/textdistance/
