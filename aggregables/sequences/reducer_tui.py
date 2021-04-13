@@ -1,12 +1,39 @@
 #!/usr/bin/env python3
 
 from aggregables.captures.multipane_tui import MultiPane
-from aggregables.differences.filterdiff import compute_replacements, apply_replacements, REPLACE_STR_DEFAULT
+from aggregables.differences.filterdiff import (
+    compute_replacements,
+    apply_replacements,
+    REPLACE_STR_DEFAULT,
+)
 from aggregables.sequences.lrs import compute_lrs, clean_lrs
 
 from collections import OrderedDict
 import re
 import sys
+
+
+try:
+    import colorama
+
+    colorama.init()
+
+    def highlight(text):
+        if text[0] == "+":
+            return (
+                colorama.Fore.GREEN
+                + colorama.Style.BRIGHT
+                + str(text)
+                + colorama.Style.RESET_ALL
+            )
+        else:
+            return str(text)
+
+
+except ImportError:
+
+    def highlight(text):
+        return str(text)
 
 
 def get_text(lineno):
@@ -37,7 +64,6 @@ def reduce_text(text, lines):
     text = bytes(text, encoding="latin-1")
     newline_positions = [x.span()[0] for x in re.finditer(b"\n", text)]
     top_substrings = compute_lrs(text)
-    # FIXME: Sort by length descending
     clean_substrings = clean_lrs(text, top_substrings)
 
     seen_i = None
@@ -91,7 +117,9 @@ for i in collapsed_occurrences.keys():
         line = "+" + replaced_lines[i].replace(REPLACE_STR_DEFAULT, "?")
     else:
         line = " " + original_lines[i]
-    collapsed_lines.append(line.rstrip())
+    line = line.rstrip()
+    if line:
+        collapsed_lines.append(highlight(line))
 
 md = MultiPane("\n".join(collapsed_lines), get_text)
 md.run()

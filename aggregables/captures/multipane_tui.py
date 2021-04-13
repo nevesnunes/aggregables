@@ -5,7 +5,9 @@
 #     - [lira/widgets\.py](https://github.com/pythonecuador/lira/blob/92cb843981099a8230aa32f5dd7b26b26e2daa95/lira/tui/widgets.py#L71-L197)
 # - [python\-prompt\-toolkit/calculator\.py at master · prompt\-toolkit/python\-prompt\-toolkit · GitHub](https://github.com/prompt-toolkit/python-prompt-toolkit/blob/master/examples/full-screen/calculator.py)
 # - [Python prompt\_toolkit: Pick best fuzzy match when the user presses enter \- Stack Overflow](https://stackoverflow.com/questions/61167987/python-prompt-toolkit-pick-best-fuzzy-match-when-the-user-presses-enter)
+# - [How can I remove the ANSI escape sequences from a string in python \- Stack Overflow](https://stackoverflow.com/questions/14693701/how-can-i-remove-the-ansi-escape-sequences-from-a-string-in-python)
 
+import re
 from prompt_toolkit import Application, ANSI
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.buffer import Buffer
@@ -154,15 +156,33 @@ class MultiPane:
         self.input_callback = input_callback
         self.preview_callback = preview_callback
 
+        self.ansi_escape_8bit = re.compile(
+            r"(?:\x1B[@-Z\\-_]|[\x80-\x9A\x9C-\x9F]|(?:\x1B\[|\x9B)[0-?]*[ -/]*[@-~])"
+        )
         self.current_lineno = 1
-        self.max_entry_width = min(max(map(lambda x: len(x), entries.split("\n"))), 48)
-        self.entries_control = BufferControl(
+        self.max_entry_width = min(
+            max(
+                map(
+                    lambda x: len(x) + 1, self.ansi_escape_8bit.sub("", entries).split("\n")
+                )
+            ),
+            48,
+        )
+
+        entries_text = ANSI(self.entries)
+        entries_formatted_text = to_formatted_text(entries_text)
+        entries_plain_text = fragment_list_to_text(entries_formatted_text)
+        self.entries_control = FormattedBufferControl(
             buffer=Buffer(
-                document=Document(self.entries, 0),
+                document=Document(entries_plain_text, 0),
                 name="entries",
                 on_cursor_position_changed=self.update_entries,
                 read_only=True,
-            )
+            ),
+            focusable=True,
+            formatted_text=entries_formatted_text,
+            include_default_input_processors=False,
+            input_processors=[FormatTextProcessor(), HighlightSelectionProcessor()],
         )
 
         if self.preview_callback:
@@ -239,9 +259,10 @@ class MultiPane:
         self.input_callback(self.input_field.text)
 
     def get_lineno(self, text, pos):
+        text = self.ansi_escape_8bit.sub("", text)
         lineno = 1
         for i, c in enumerate(text):
-            if c == "\n" and i != pos:
+            if (c == ord(b"\n") or c == "\n") and i != pos:
                 lineno += 1
             if i == pos:
                 break
