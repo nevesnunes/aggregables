@@ -77,9 +77,9 @@ def print_unified_format(hex_diff, filename_old, filename_new):
         else:
             line = f"{change_symbol}{hex(offset//2).rjust(8)}: {chunk_hex} | {bytes.fromhex(chunk_hex)}"
         if change_type == 1:
-            print(highlight_removal(line))
-        elif change_type == -1:
             print(highlight_addition(line))
+        elif change_type == -1:
+            print(highlight_removal(line))
         else:
             print(line)
             offset = next_offset

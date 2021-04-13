@@ -8,10 +8,11 @@ import sys
 
 DEBUG = bool(os.environ.get("DEBUG"))
 EXACT = bool(os.environ.get("EXACT"))
+REPLACE_STR_DEFAULT = "\x00"
 if EXACT:
     REPLACE_STR = "__027b596b_2b2b_451e_b051_2130237b863f__{}__"
 else:
-    REPLACE_STR = "\x00"
+    REPLACE_STR = REPLACE_STR_DEFAULT
 
 
 def debug(*args: Any, indent: int = 0) -> None:

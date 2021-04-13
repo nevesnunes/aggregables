@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-from category_index import ReverseIndex
-from multipane_tui import MultiPane
+from aggregables.captures.category_index import ReverseIndex
+from aggregables.captures.multipane_tui import MultiPane
 import funcdiff
 import sys
 

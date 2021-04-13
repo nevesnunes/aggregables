@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
 
+# TODO:
+# - Apply bitmask on opcodes to zero out variant bits (e.g. relative and absolute addresses or nops)
+#     - Hash resulting instruction bytes instead of mnemonics
+#     - https://www.hex-rays.com/products/ida/tech/flirt/in_depth/#Variability
+
 import filterdiff
 import ratio
 

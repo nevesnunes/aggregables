@@ -1,6 +1,14 @@
 # Aggregables
 
-Snippets and scripts to parse and manipulate data patterns. These are categorized by analysis task:
+Snippets and scripts to parse and manipulate data patterns.
+
+## Install
+
+```bash
+pip install -e .
+```
+
+## Tasks
 
 <!-- toc -->
 
@@ -36,7 +44,7 @@ Snippets and scripts to parse and manipulate data patterns. These are categorize
 
 ### Compare deviations of two time spans in logs, grouped by captured variables
 
-- [measure_deviating_groups.py](./captures/log-observer/measure_deviating_groups.py)
+- [measure_deviating_groups.py](./aggregables/captures/log-observer/measure_deviating_groups.py)
 
 Use cases:
 
@@ -129,7 +137,7 @@ Alternatives:
 
 ### Visualize co-occurrences
 
-- [heapmap.py](./captures/heatmap.py)
+- [heapmap.py](./aggregables/captures/heatmap.py)
 
 Usage:
 
@@ -170,8 +178,8 @@ Caption:
 
 Alternatives:
 
-- 2D data: [matplotlib/heatmap.py](./captures/matplotlib/heatmap.py)
-- 1D data shaped as 2D: [matplotlib/heatmap-sequence.py](./captures/matplotlib/heatmap-sequence.py)
+- 2D data: [matplotlib/heatmap.py](./aggregables/captures/matplotlib/heatmap.py)
+- 1D data shaped as 2D: [matplotlib/heatmap-sequence.py](./aggregables/captures/matplotlib/heatmap-sequence.py)
 
 Related work:
 
@@ -218,7 +226,7 @@ Output (occurrences, distribution, value):
 
 Alternatives:
 
-- Single chart: [matplotlib/bar.py](./captures/matplotlib/bar.py)
+- Single chart: [matplotlib/bar.py](./aggregables/captures/matplotlib/bar.py)
     - Usage: `./bar.py 1.csv`
 
 Related work:
@@ -230,14 +238,14 @@ Related work:
 
 ### Small multiple charts
 
-- [multiple_bar.py](./captures/matplotlib/multiple_bar.py)
+- [multiple_bar.py](./aggregables/captures/matplotlib/multiple_bar.py)
   - Interpolates bar color to make value differences across multiple scales more explicit
   - Sorts by [Tukey's fences](https://en.wikipedia.org/wiki/Outlier#Tukey's_fences) and standard deviation for faster detection of anomalies
   - Outputs to pdf to handle large numbers of charts
 
 Usage: `paste -d ',' 1.csv 3.csv 12.csv | ./multiple_bar.py`
 
-Output: [pdf](./captures/matplotlib/output-multiple_bar.pdf)
+Output: [pdf](./aggregables/captures/matplotlib/output-multiple_bar.pdf)
 
 #### Example: Side-Channel Statistical Analysis
 
@@ -245,11 +253,11 @@ Output: [pdf](./captures/matplotlib/output-multiple_bar.pdf)
 
 ### Line chart
 
-- [line.py](./captures/matplotlib/line.py)
+- [line.py](./aggregables/captures/matplotlib/line.py)
 
 #### Example: Instruction trace of an executable
 
-- [Source code](./sequences/loops.c)
+- [Source code](./aggregables/sequences/loops.c)
   
 This program takes the "else" branch in the first iteration, then the "if" branch in the remaining iterations. We can observe in the line chart that there are two blocks of repeated patterns, with the second block taking significantly more instructions.
 
@@ -279,12 +287,12 @@ cat \
 
 Output: 
 
-![image](./captures/matplotlib/line.png)
+![image](./aggregables/captures/matplotlib/line.png)
 
 ### Proximity search for two or more substrings
 
-- [magrep.sh](./captures/magrep.sh)
-- [magrep.py](./captures/magrep.py)
+- [magrep.sh](./aggregables/captures/magrep.sh)
+- [magrep.py](./aggregables/captures/magrep.py)
 
 Usage: `./magrep.py test1 'brown.*quick'`
 
@@ -348,7 +356,7 @@ Alternatives:
 
 ### Summarize distinct bytes in two files
 
-- [hexdiff.py](./differences/hexdiff.py)
+- [hexdiff.py](./aggregables/differences/hexdiff.py)
 
 Benchmarking:
 
@@ -422,7 +430,7 @@ diff -Naurw <(grep "$p" ~/f1) <(grep "$p" ~/f2)
 
 ### Trace changes in variables
 
-- [trace.py](./differences/trace.py)
+- [trace.py](./aggregables/differences/trace.py)
 
 Usage:
 
@@ -464,7 +472,7 @@ Output (count of variable changes; variable; value):
 
 ### Apply ignore filters to output
 
-- [filterdiff.py](./differences/filterdiff.py)
+- [filterdiff.py](./aggregables/differences/filterdiff.py)
 
 Usage:
 
@@ -630,7 +638,7 @@ Compare with `diff -u <(strace ./loops 2>&1 | sed 's/\(0x[0-9a-f]\+\)\|\([0-9]\+
 
 #### Example: function dissassembly diff between 2 executables
 
-- [funcdiff_tui.py](./differences/funcdiff_tui.py)
+- [funcdiff_tui.py](./aggregables/differences/funcdiff_tui.py)
 
 Consider the following diff between 2 programs:
 
@@ -665,7 +673,7 @@ Input:
 
 Output (interactive interface with preview for function diffs, offsets don't contribute to the diff, entries sorted by similarity ratio):
 
-![image](./differences/funcdiff_loops.png)
+![image](./aggregables/differences/funcdiff_loops.png)
 
 References:
 
@@ -676,7 +684,7 @@ References:
 
 ### Summarize matched bytes in file
 
-- [hexmatch.py](./sequences/hexmatch.py)
+- [hexmatch.py](./aggregables/sequences/hexmatch.py)
 
 Usage:
 
@@ -715,7 +723,7 @@ Output (`0x[...]`: offset in hex, `e`: endianess, `k`: off-by-k, `b'[...]'`: mat
 
 ### Filter out repeated k-line patterns in a plaintext stream
 
-- [multi_line-uniq.sh](./captures/multi_line-uniq.sh)
+- [multi_line-uniq.sh](./aggregables/captures/multi_line-uniq.sh)
 
 Usage:
 
@@ -734,7 +742,7 @@ Output (single occurrences of '1 2' and '3'):
 
 ### Find longest k-repeating substrings in byte stream
 
-- [lrs.py](./differences/lrs.py)
+- [lrs.py](./aggregables/sequences/lrs.py)
 
 Input (hex dump of file):
 
