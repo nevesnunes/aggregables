@@ -1,3 +1,4 @@
+dateparser==0.7.6
 diff-match-patch==20200713
 prompt-toolkit==3.0.16
 r2pipe==1.5.3
