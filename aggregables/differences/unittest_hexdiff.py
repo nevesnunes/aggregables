@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from hexdiff import diff_bytes, isolate_bytes, print_unified_format
+from hexdiff import diff_bytes, isolate_bytes, unified_format
 import unittest
 
 
@@ -62,5 +62,5 @@ class Tests(unittest.TestCase):
         self.assertListEqual(diff, expected_diff)
         isolated_diff = isolate_bytes(diff)
         self.assertListEqual(isolated_diff, expected_isolated_diff)
-        offsets = print_unified_format(isolated_diff, "base", "derivative")
+        offsets = list(map(lambda x: x[3] // 2, unified_format(isolated_diff)))  # Extract derivative byte offsets, converted from hex offsets
         self.assertListEqual(offsets, expected_offsets)

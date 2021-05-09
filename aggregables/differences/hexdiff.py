@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import diff_match_patch
+import gc
 import sys
 
 MAX_CHUNK_DISPLAY_LEN = 80
@@ -85,11 +86,39 @@ def isolate_bytes(diff):
     return new_diff
 
 
-def print_unified_format(diff, filename_old, filename_new):
+def print_unified_format(elements, filename_old, filename_new):
     print(highlight_filename(f"--- {filename_old}"))
     print(highlight_filename(f"+++ {filename_new}"))
 
-    offsets_log = []
+    change_symbol = None
+    base_offset = 0
+    next_base_offset = 0
+    offset = 0
+    next_offset = 0
+    for change_type, change_symbol, base_offset, offset, chunk_hex in elements:
+        # Ommit middle bytes when outputting large differences.
+        # Prefer displaying more start bytes than end bytes, as relevant
+        # info is more likely to be at start (e.g. metadata, headers...).
+        line = change_symbol
+        if base_offset != offset:
+            line += f"{hex(base_offset // 2).rjust(JUST_LEN)},"
+        else:
+            line += "".rjust(JUST_LEN + 1)
+        line += f"{hex(offset // 2).rjust(JUST_LEN)}: "
+        if len(chunk_hex) > MAX_CHUNK_DISPLAY_LEN:
+            line += f"{chunk_hex[:MAX_CHUNK_DISPLAY_LEN - 20]} [...] {chunk_hex[-20:]} | {bytes.fromhex(chunk_hex[:MAX_CHUNK_DISPLAY_LEN - 20])} [...] {bytes.fromhex(chunk_hex[-20:])} [+ {(len(chunk_hex) - MAX_CHUNK_DISPLAY_LEN) // 2} byte(s)]"
+        else:
+            line += f"{chunk_hex} | {bytes.fromhex(chunk_hex)}"
+        if change_type == 1:
+            print(highlight_addition(line))
+        elif change_type == -1:
+            print(highlight_removal(line))
+        else:
+            print(line)
+
+
+def unified_format(diff):
+    elements = []
 
     change_symbol = None
     base_offset = 0
@@ -113,31 +142,13 @@ def print_unified_format(diff, filename_old, filename_new):
             offset = next_offset
             next_offset += chunk_len
 
-        offsets_log.append(offset // 2)
+        elements.append((change_type, change_symbol, base_offset, offset, chunk_hex))
 
-        # Ommit middle bytes when outputting large differences.
-        # Prefer displaying more start bytes than end bytes, as relevant
-        # info is more likely to be at start (e.g. metadata, headers...).
-        line = change_symbol
-        if base_offset != offset:
-            line += f"{hex(base_offset // 2).rjust(JUST_LEN)},"
-        else:
-            line += "".rjust(JUST_LEN + 1)
-        line += f"{hex(offset // 2).rjust(JUST_LEN)}: "
-        if len(chunk_hex) > MAX_CHUNK_DISPLAY_LEN:
-            line += f"{chunk_hex[:MAX_CHUNK_DISPLAY_LEN - 20]} [...] {chunk_hex[-20:]} | {bytes.fromhex(chunk_hex[:MAX_CHUNK_DISPLAY_LEN - 20])} [...] {bytes.fromhex(chunk_hex[-20:])} [+ {(len(chunk_hex) - MAX_CHUNK_DISPLAY_LEN) // 2} byte(s)]"
-        else:
-            line += f"{chunk_hex} | {bytes.fromhex(chunk_hex)}"
-        if change_type == 1:
-            print(highlight_addition(line))
-        elif change_type == -1:
-            print(highlight_removal(line))
-        else:
-            print(line)
+        if change_type == 0:
             offset = next_offset
             base_offset = next_base_offset
 
-    return offsets_log
+    return elements
 
 
 def diff_bytes(c1, c2):
@@ -156,5 +167,13 @@ if __name__ == "__main__":
         c2 = f2.read()
 
     diff = diff_bytes(c1, c2)
+    del c1
+    del c2
+    gc.collect()
+
     diff = isolate_bytes(diff)
-    print_unified_format(diff, filename_old, filename_new)
+    elements = unified_format(diff)
+    del diff
+    gc.collect()
+
+    print_unified_format(elements, filename_old, filename_new)
