@@ -18,6 +18,7 @@ pip install -e .
   * [Captures](#captures)
     + [Visualize co-occurrences](#visualize-co-occurrences)
     + [Histogram](#histogram)
+      - [Example: Verify `/dev/urandom`](#example-verify-devurandom)
     + [Small multiple charts](#small-multiple-charts)
       - [Example: Side-Channel Statistical Analysis](#example-side-channel-statistical-analysis)
     + [Line chart](#line-chart)
@@ -235,6 +236,21 @@ Related work:
 - [GitHub \- wizzat/distribution: Short, simple, direct scripts for creating ASCII graphical histograms in the terminal\.](https://github.com/wizzat/distribution)
 - [Edward Tufte forum: Sparkline theory and practice](http://www.edwardtufte.com/bboard/q-and-a-fetch-msg?msg_id=0001OR&topic_id=1)
     - [Wicked Cool Usage · holman/spark Wiki · GitHub](https://github.com/holman/spark/wiki/Wicked-Cool-Usage)
+
+#### Example: Verify `/dev/urandom`
+
+Input (using `filled_uniq_count.py` to add zeroes for missing values):
+
+```bash
+./bar.py <(head -c100000 /dev/urandom \
+  | od -tuC -An -v \
+  | sed 's/ /\n/g' \
+  | ./filled_uniq_count.py)
+```
+
+Output ([de-skewed distribution](https://datatracker.ietf.org/doc/html/rfc1750)):
+
+![image](./aggregables/captures/matplotlib/urandom.png)
 
 ### Small multiple charts
 
