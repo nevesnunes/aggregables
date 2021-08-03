@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
 
+# TODO:
+# - To workaround bad performance when comparing large files, split them by chunks, then compare chunks
+# - Other formats (e.g. hexdump, disasm...)
+
+import argparse
 import diff_match_patch
 import gc
 import sys
 
 MAX_CHUNK_DISPLAY_LEN = 80
-JUST_LEN = 10
 
 
 try:
@@ -86,9 +90,9 @@ def isolate_bytes(diff):
     return new_diff
 
 
-def print_unified_format(elements, filename_old, filename_new):
-    print(highlight_filename(f"--- {filename_old}"))
-    print(highlight_filename(f"+++ {filename_new}"))
+def print_unified_format(elements, parsed_args, just_len):
+    print(highlight_filename(f"--- {parsed_args.base}"))
+    print(highlight_filename(f"+++ {parsed_args.derivative}"))
 
     change_symbol = None
     base_offset = 0
@@ -96,19 +100,33 @@ def print_unified_format(elements, filename_old, filename_new):
     offset = 0
     next_offset = 0
     for change_type, change_symbol, base_offset, offset, chunk_hex in elements:
-        # Ommit middle bytes when outputting large differences.
-        # Prefer displaying more start bytes than end bytes, as relevant
-        # info is more likely to be at start (e.g. metadata, headers...).
         line = change_symbol
         if base_offset != offset:
-            line += f"{hex(base_offset // 2).rjust(JUST_LEN)},"
+            line += f"{hex(base_offset // 2).rjust(just_len)},"
+        elif parsed_args.columns:
+            line += "".rjust(just_len + 1)
+        line += f"{hex(offset // 2).rjust(just_len)}: "
+
+        if change_type == 0 or (
+            parsed_args.all_diffs and len(chunk_hex) > MAX_CHUNK_DISPLAY_LEN
+        ):
+            # Ommit middle bytes when outputting large differences.
+            # Prefer displaying more start bytes than end bytes, as relevant
+            # info is more likely to be at start (e.g. metadata, headers...).
+            output_bytes = (
+                f"{chunk_hex[:MAX_CHUNK_DISPLAY_LEN - 20]} [...] {chunk_hex[-20:]}"
+            )
+            if not parsed_args.only_hex:
+                output_bytes += f" | {bytes.fromhex(chunk_hex[:MAX_CHUNK_DISPLAY_LEN - 20])} [...] {bytes.fromhex(chunk_hex[-20:])}"
+            output_bytes += (
+                f" [+ {(len(chunk_hex) - MAX_CHUNK_DISPLAY_LEN) // 2} byte(s)]"
+            )
         else:
-            line += "".rjust(JUST_LEN + 1)
-        line += f"{hex(offset // 2).rjust(JUST_LEN)}: "
-        if len(chunk_hex) > MAX_CHUNK_DISPLAY_LEN:
-            line += f"{chunk_hex[:MAX_CHUNK_DISPLAY_LEN - 20]} [...] {chunk_hex[-20:]} | {bytes.fromhex(chunk_hex[:MAX_CHUNK_DISPLAY_LEN - 20])} [...] {bytes.fromhex(chunk_hex[-20:])} [+ {(len(chunk_hex) - MAX_CHUNK_DISPLAY_LEN) // 2} byte(s)]"
-        else:
-            line += f"{chunk_hex} | {bytes.fromhex(chunk_hex)}"
+            output_bytes = f"{chunk_hex}"
+            if not parsed_args.only_hex:
+                output_bytes += f" | {bytes.fromhex(chunk_hex)}"
+        line += output_bytes
+
         if change_type == 1:
             print(highlight_addition(line))
         elif change_type == -1:
@@ -160,11 +178,35 @@ def diff_bytes(c1, c2):
 
 
 if __name__ == "__main__":
-    filename_old = sys.argv[1]
-    filename_new = sys.argv[2]
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "-a",
+        "--all-diffs",
+        action="store_false",
+        help="include middle bytes when outputting large differences",
+    )
+    parser.add_argument(
+        "-c",
+        "--columns",
+        action="store_true",
+        help="align offsets in justified columns (as many as the number of compared files); only applies when diffs include added/removed bytes, since the next changesets will occur on distinct offsets",
+    )
+    parser.add_argument(
+        "-x",
+        "--only-hex",
+        action="store_true",
+        help="do not output literal bytes in addition to hex-encoded bytes",
+    )
+    parser.add_argument("base", type=str, help="base (i.e. old) file name")
+    parser.add_argument("derivative", type=str, help="derivative (i.e. new) file name")
+    parsed_args = parser.parse_args()
+
+    filename_old = parsed_args.base
+    filename_new = parsed_args.derivative
     with open(filename_old, "rb") as f1, open(filename_new, "rb") as f2:
         c1 = f1.read()
         c2 = f2.read()
+    just_len = max(len(hex(len(c1))), len(hex(len(c2))))
 
     diff = diff_bytes(c1, c2)
     del c1
@@ -176,4 +218,4 @@ if __name__ == "__main__":
     del diff
     gc.collect()
 
-    print_unified_format(elements, filename_old, filename_new)
+    print_unified_format(elements, parsed_args, just_len)

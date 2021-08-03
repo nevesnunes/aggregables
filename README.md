@@ -105,6 +105,7 @@ Caption (for each block):
 
 Related work:
 
+- [GitHub \- rcoh/angle\-grinder: Slice and dice logs on the command line](https://github.com/rcoh/angle-grinder)
 - [The Path from Unstructured Logs to Observability - Honeycomb](https://www.honeycomb.io/wp-content/uploads/2019/08/From-Unstructured-Logs-to-Observability-Honeycomb.pdf)
     - [Explore with BubbleUp](https://docs.honeycomb.io/working-with-your-data/bubbleup/)
 

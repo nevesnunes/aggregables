@@ -12,7 +12,7 @@ import r2pipe
 import sys
 
 
-def parse_functions(filename):
+def parse_functions(filename, needle=None):
     r2p = r2pipe.open(filename)
     r2p.cmd("aaa")
     functions = r2p.cmdj("aflj")
@@ -22,11 +22,19 @@ def parse_functions(filename):
             # Skip imports
             continue
 
+        if needle and f["offset"] != needle:
+            # Skip unmatched offsets
+            continue
+
         instructions = []
         opcodes = []
         # FIXME: Consider `pdrj` for non-linear obfuscated functions
         # - [radare2 disassembly commands doesn&\#39;t work properly\. · Issue \#11325 · radareorg/radare2 · GitHub](https://github.com/radareorg/radare2/issues/11325)
         for ins in r2p.cmdj(f"pdfj @{f['offset']}")["ops"]:
+            if 'disasm' not in ins or ins['type'] == 'invalid':
+                print(f"Skipping invalid function at {hex(ins['offset'])} in file {filename}", file=sys.stderr)
+                continue
+
             instructions.append(f"{hex(ins['offset'])} {ins['disasm']}")
             opcodes.append(ins["disasm"].split()[0])
         parsed_functions.append(
@@ -89,9 +97,66 @@ def matches_from_functions(functions, opcode_hashes, reverse=False):
     return best_matches
 
 
-def compute_best_matches(filename1, filename2):
-    parsed_functions_1 = parse_functions(sys.argv[1])
-    parsed_functions_2 = parse_functions(sys.argv[2])
+def matches_from_functions_cross(functions, opcode_hashes, reverse=False):
+    best_matches = []
+    for f1 in functions[0]:
+        best_f1_r = 0
+        picked_f2 = None
+        for f2 in functions[1]:
+            if f1 == f2:
+                continue
+            f1_r = ratio.compute_similarity(f1["opcodes"], f2["opcodes"])
+            best_f1_r = f1_r
+            picked_f2 = f2
+
+            if reverse:
+                first = picked_f2
+                second = f1
+            else:
+                first = f1
+                second = picked_f2
+
+                best_matches.append(
+                    {"ratio": round(best_f1_r, 4), "first": first, "second": second}
+                )
+        if not picked_f2:
+            picked_f2 = {
+                "name": "[N/A]",
+                "offset": 0,
+                "instructions": [],
+                "opcodes": [],
+                "hash": hash(tuple([])),
+            }
+
+            if reverse:
+                first = picked_f2
+                second = f1
+            else:
+                first = f1
+                second = picked_f2
+
+            best_matches.append(
+                {"ratio": round(best_f1_r, 4), "first": first, "second": second}
+            )
+
+    best_matches = sorted(best_matches, key=lambda x: x["ratio"], reverse=True)
+    best_matches = list(
+        filter(
+            lambda x: x["ratio"] < 1.0
+            and (
+                not x["second"]["hash"] in opcode_hashes
+                or opcode_hashes[x["second"]["hash"]] != 0
+            ),
+            best_matches,
+        )
+    )
+
+    return best_matches
+
+
+def compute_best_matches(filename1, filename2, needle1=None, needle2=None):
+    parsed_functions_1 = parse_functions(sys.argv[1], needle1)
+    parsed_functions_2 = parse_functions(sys.argv[2], needle2)
 
     # To avoid false positives due to functions in the first listing
     # also existing in the second listing, track relative number of
@@ -108,9 +173,14 @@ def compute_best_matches(filename1, filename2):
         if pf2_hash not in opcode_hashes:
             opcode_hashes[pf2_hash] = 0
         opcode_hashes[pf2_hash] -= 1
-    best_matches = matches_from_functions(
-        (parsed_functions_1, parsed_functions_2), opcode_hashes
-    )
+    if needle1 or needle2:
+        best_matches = matches_from_functions_cross(
+            (parsed_functions_1, parsed_functions_2), opcode_hashes
+        )
+    else:
+        best_matches = matches_from_functions(
+            (parsed_functions_1, parsed_functions_2), opcode_hashes
+        )
 
     # To include new functions from the second listing, we do a second pass,
     # processing the unmatched functions of both listings from the first pass.
@@ -132,9 +202,14 @@ def compute_best_matches(filename1, filename2):
             parsed_functions_2,
         )
     )
-    best_matches += matches_from_functions(
-        (distinct_functions_2, distinct_functions_1), best_opcode_hashes, True
-    )
+    if needle1 or needle2:
+        best_matches += matches_from_functions(
+            (distinct_functions_2, distinct_functions_1), best_opcode_hashes, True
+        )
+    else:
+        best_matches += matches_from_functions(
+            (distinct_functions_2, distinct_functions_1), best_opcode_hashes, True
+        )
 
     max_width = 0
     for bm in best_matches:
