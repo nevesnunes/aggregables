@@ -738,6 +738,10 @@ Output (`0x[...]`: offset in hex, `e`: endianess, `k`: off-by-k, `b'[...]'`: mat
 /proc/self/fd/11:6(0x6):e=be,k=-1:42 b'B'
 ```
 
+Related work:
+
+- [GitHub \- rsharo/bgrep: Binary Grep](https://github.com/rsharo/bgrep)
+
 ### Filter out repeated k-line patterns in a plaintext stream
 
 - [multi_line-uniq.sh](./aggregables/captures/multi_line-uniq.sh)

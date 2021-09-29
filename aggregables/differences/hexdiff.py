@@ -9,9 +9,6 @@ import diff_match_patch
 import gc
 import sys
 
-MAX_CHUNK_DISPLAY_LEN = 80
-
-
 try:
     import colorama
 
@@ -49,9 +46,39 @@ except ImportError:
         return str(text)
 
 
+# e.g. (-1, '6'), (1, '4'), (0, '0')
+def normalize_odd_change_concat_with_next(diff):
+    new_diff = []
+    skips = 0
+    for i in range(len(diff)):
+        if skips > 0:
+            skips -= 1
+            continue
+        pair = diff[i]
+        if pair[0] == -1 and len(pair[1]) % 2 == 1:
+            pair2 = diff[i + 1]
+            if pair2[0] == 1 and len(pair2[1]) % 2 == 1:
+                pair3 = diff[i + 2]
+                if pair3[0] == 0 and len(pair3[1]) % 2 == 1:
+                    first_nibble3 = pair3[1][0]
+                    new_substring = pair[1] + first_nibble3
+                    new_substring2 = pair2[1] + first_nibble3
+                    new_substring3 = pair3[1][1:]
+                    new_diff.append((pair[0], new_substring))
+                    new_diff.append((pair2[0], new_substring2))
+                    new_diff.append((pair3[0], new_substring3))
+                    skips = 2
+                    continue
+        new_diff.append(pair)
+
+    return new_diff
+
+
 # Ensures changesets have an even number of bytes,
 # to avoid errors when hex decoding
 def isolate_bytes(diff):
+    diff = normalize_odd_change_concat_with_next(diff)
+
     new_diff = []
     last_nibble = None
     last_nibble_carryover = None
@@ -64,14 +91,17 @@ def isolate_bytes(diff):
                     # if we have a carryover, then add it,
                     # making changeset have even length
                     new_substring = last_nibble_carryover + pair[1]
+                    assert len(new_substring) % 2 == 0
                     new_diff.append((pair[0], new_substring))
                     last_nibble_carryover = None
                 else:
                     # changeset has odd length, store last nibble for next pair
                     last_nibble = pair[1][len_substring - 1]
                     new_substring = pair[1][: len_substring - 1]
+                    assert len(new_substring) % 2 == 0
                     new_diff.append((pair[0], new_substring))
             else:
+                assert len(pair[1]) % 2 == 0
                 new_diff.append((pair[0], pair[1]))
         else:
             if last_nibble:
@@ -84,13 +114,15 @@ def isolate_bytes(diff):
                     last_nibble_carryover = pair[1][len_substring - 1]
                     new_substring = new_substring[: len_new_substring - 1]
 
+                assert len(new_substring) % 2 == 0
                 new_diff.append((pair[0], new_substring))
             else:
+                assert len(pair[1]) % 2 == 0
                 new_diff.append((pair[0], pair[1]))
     return new_diff
 
 
-def print_unified_format(elements, parsed_args, just_len):
+def print_unified_format(elements, parsed_args, just_len, display_len):
     print(highlight_filename(f"--- {parsed_args.base}"))
     print(highlight_filename(f"+++ {parsed_args.derivative}"))
 
@@ -107,24 +139,18 @@ def print_unified_format(elements, parsed_args, just_len):
             line += "".rjust(just_len + 1)
         line += f"{hex(offset // 2).rjust(just_len)}: "
 
-        if change_type == 0 or (
-            parsed_args.all_diffs and len(chunk_hex) > MAX_CHUNK_DISPLAY_LEN
-        ):
+        if (change_type == 0 or parsed_args.all_diffs) and len(chunk_hex) > display_len:
             # Ommit middle bytes when outputting large differences.
             # Prefer displaying more start bytes than end bytes, as relevant
             # info is more likely to be at start (e.g. metadata, headers...).
-            output_bytes = (
-                f"{chunk_hex[:MAX_CHUNK_DISPLAY_LEN - 20]} [...] {chunk_hex[-20:]}"
-            )
+            output_bytes = f"{chunk_hex[:display_len - 20]} [...] {chunk_hex[-20:]}"
             if not parsed_args.only_hex:
-                output_bytes += f" | {bytes.fromhex(chunk_hex[:MAX_CHUNK_DISPLAY_LEN - 20])} [...] {bytes.fromhex(chunk_hex[-20:])}"
-            output_bytes += (
-                f" [+ {(len(chunk_hex) - MAX_CHUNK_DISPLAY_LEN) // 2} byte(s)]"
-            )
+                output_bytes += f" -> {bytes.fromhex(chunk_hex[:display_len - 20])} [...] {bytes.fromhex(chunk_hex[-20:])}"
+            output_bytes += f" [+ {(len(chunk_hex) - display_len) // 2} byte(s)]"
         else:
             output_bytes = f"{chunk_hex}"
             if not parsed_args.only_hex:
-                output_bytes += f" | {bytes.fromhex(chunk_hex)}"
+                output_bytes += f" -> {bytes.fromhex(chunk_hex)}"
         line += output_bytes
 
         if change_type == 1:
@@ -192,6 +218,13 @@ if __name__ == "__main__":
         help="align offsets in justified columns (as many as the number of compared files); only applies when diffs include added/removed bytes, since the next changesets will occur on distinct offsets",
     )
     parser.add_argument(
+        "-l",
+        "--length",
+        type=int,
+        default=80,
+        help="maximum display length used in output chunks",
+    )
+    parser.add_argument(
         "-x",
         "--only-hex",
         action="store_true",
@@ -218,4 +251,5 @@ if __name__ == "__main__":
     del diff
     gc.collect()
 
-    print_unified_format(elements, parsed_args, just_len)
+    display_len = parsed_args.length
+    print_unified_format(elements, parsed_args, just_len, display_len)

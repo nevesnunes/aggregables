@@ -179,7 +179,7 @@ def make_bars(measures, comparisons, min_value, max_value):
 def parse_request():
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "-f", "--filename", type=str, help="Path for csv file",
+        "-f", "--filename", type=str, help="Path for csv file", required=True
     )
     parser.add_argument(
         "-o",
@@ -197,7 +197,7 @@ def parse_request():
         const="tukey_fences",
         nargs="?",
         choices=["tukey_fences", "clustering"],
-        help="Strategy for calculating outliers",
+        help="Strategy for calculating outliers (default: `tukey_fences`)",
     )
     parsed_args = parser.parse_args()
 
