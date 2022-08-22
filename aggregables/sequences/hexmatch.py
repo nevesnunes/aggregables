@@ -3,6 +3,7 @@
 import argparse
 import binascii
 import re
+import subprocess
 import sys
 
 try:
@@ -21,6 +22,13 @@ try:
             + colorama.Style.RESET_ALL
         )
 
+    def highlight_secondary(text):
+        return (
+            colorama.Fore.MAGENTA
+            + colorama.Style.BRIGHT
+            + str(text)
+            + colorama.Style.RESET_ALL
+        )
 
 except ImportError:
 
@@ -51,8 +59,33 @@ def clean_needle(needle, is_regex):
 
 
 def match(data, needle, is_regex):
-    clean_needle = needle if is_regex else re.escape(needle)
-    return [(x.start(), x.end()) for x in re.finditer(clean_needle, data)]
+    try:
+        clean_needle = needle if is_regex else re.escape(needle)
+        return [(x.start(), x.end()) for x in re.finditer(clean_needle, data)]
+    except Exception as e:
+        raise RuntimeError(f"Bad match with needle={needle}", e)
+
+
+def match_index_based(data, needle):
+    match_i = 0
+    indexes = [ord(x)-ord(needle[0]) for x in needle[1:]]
+    offsets = []
+    try:
+        for i in range(len(data) - len(indexes)):
+            candidate = bytearray(data[i : i + len(indexes) + 1])
+            for j in range(len(indexes)):
+                if candidate[j+1] - candidate[0] == indexes[j]:
+                    match_i += 1
+                    if match_i == len(indexes):
+                        offsets.append(i)
+                        match_i = 0
+                        break
+                else:
+                    match_i = 0
+                    break
+        return [(x, x + len(needle)) for x in offsets]
+    except Exception as e:
+        raise RuntimeError(f"Bad match with needle={needle}", e)
 
 
 def clean_match(matched_bytes, output_encoding):
@@ -78,11 +111,23 @@ if __name__ == "__main__":
         help="fuzzy match with all heuristics (e.g. endianness, off-by-k...)",
     )
     parser.add_argument(
+        "-d",
+        "--disassembly_arch",
+        type=str,
+        help="disassemble matched bytes in the given architecture (format=rasm2)",
+    )
+    parser.add_argument(
         "-e",
         "--endianness",
         type=str,
         choices=["be", "le"],
         help="match with either big (be) or little (le) endianness",
+    )
+    parser.add_argument(
+        "-i",
+        "--index-based",
+        action="store_true",
+        help="match by alphabet index differential instead of literal bytes (e.g. 'ACDC' -> [+2, +1, -1] will match b'\x00\x02\x03\x02' and b'\x41\x43\x44\x43')",
     )
     parser.add_argument(
         "-k",
@@ -127,8 +172,12 @@ if __name__ == "__main__":
         k = parsed_args.off_by_k
     if parsed_args.padding:
         padding = parsed_args.padding
+    disassemble_arch = []
+    if parsed_args.disassembly_arch:
+        disassemble_arch = [parsed_args.disassembly_arch]
 
     is_needle_regex = parsed_args.regex
+    is_index_based = parsed_args.index_based
 
     raw_bytes = clean_needle(parsed_args.needle, is_needle_regex)
 
@@ -149,14 +198,22 @@ if __name__ == "__main__":
                 if e == "le":
                     needle = needle[::-1]
                 needle = bytes(needle)
-                offsets = match(data, needle, is_needle_regex)
+                if is_index_based:
+                    if is_needle_regex:
+                        raise RuntimeError("TODO: Regex with index based matching is not suported.")
+                    offsets = match_index_based(data, parsed_args.needle)
+                else:
+                    offsets = match(data, needle, is_needle_regex)
                 for offset in offsets:
                     matched_bytes = data[offset[0] : offset[1]]
+                    matched_disassembly = ""
+                    for arch in disassemble_arch:
+                        matched_disassembly += highlight_secondary(" " + '; '.join(subprocess.check_output(['rasm2', '-a', arch, '-d', binascii.hexlify(matched_bytes).decode('ascii')]).decode('latin-1').split('\n')))
                     iteration = ""
                     if e != "be" or i != 0:
                         iteration = f"e={e},k={'+' if i > 0 else ''}{i}"
                     results.append(
-                        f"{highlight_bold(filename)}:{highlight_primary(offset[0])}({highlight_primary(hex(offset[0]))}):{highlight_bold(iteration)}{':' if iteration else ''}{binascii.hexlify(matched_bytes).decode('ascii')} {clean_match(matched_bytes, parsed_args.output)}"
+                        f"{highlight_bold(filename)}:{highlight_primary(offset[0])}({highlight_primary(hex(offset[0]))}):{highlight_bold(iteration)}{':' if iteration else ''}{binascii.hexlify(matched_bytes).decode('ascii')} {clean_match(matched_bytes, parsed_args.output)}{matched_disassembly}"
                     )
 
     if len(results) < 1:
