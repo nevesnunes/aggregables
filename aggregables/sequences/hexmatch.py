@@ -30,12 +30,31 @@ try:
             + colorama.Style.RESET_ALL
         )
 
+    def highlight_hex(text):
+        text = str(text)
+        o = ""
+        for i in range(0, len(text), 2):
+            x = text[i : i + 2]
+            if x == "00":
+                # Grey
+                o += "\x1b[38;5;8m" + x + colorama.Style.RESET_ALL
+            else:
+                o += x
+        return o
+
+
 except ImportError:
 
     def highlight_bold(text):
         return str(text)
 
     def highlight_primary(text):
+        return str(text)
+
+    def highlight_secondary(text):
+        return str(text)
+
+    def highlight_hex(text):
         return str(text)
 
 
@@ -68,13 +87,13 @@ def match(data, needle, is_regex):
 
 def match_index_based(data, needle):
     match_i = 0
-    indexes = [ord(x)-ord(needle[0]) for x in needle[1:]]
+    indexes = [ord(x) - ord(needle[0]) for x in needle[1:]]
     offsets = []
     try:
         for i in range(len(data) - len(indexes)):
             candidate = bytearray(data[i : i + len(indexes) + 1])
             for j in range(len(indexes)):
-                if candidate[j+1] - candidate[0] == indexes[j]:
+                if candidate[j + 1] - candidate[0] == indexes[j]:
                     match_i += 1
                     if match_i == len(indexes):
                         offsets.append(i)
@@ -127,7 +146,7 @@ if __name__ == "__main__":
         "-i",
         "--index-based",
         action="store_true",
-        help="match by alphabet index differential instead of literal bytes (e.g. 'ACDC' -> [+2, +1, -1] will match b'\x00\x02\x03\x02' and b'\x41\x43\x44\x43')",
+        help="match by alphabet index differential instead of literal bytes (e.g. 'ACDC' -> [+2, +1, -1] will match b\'\\x00\\x02\\x03\\x02\' and b'\x41\x43\x44\x43')",
     )
     parser.add_argument(
         "-k",
@@ -200,7 +219,9 @@ if __name__ == "__main__":
                 needle = bytes(needle)
                 if is_index_based:
                     if is_needle_regex:
-                        raise RuntimeError("TODO: Regex with index based matching is not suported.")
+                        raise RuntimeError(
+                            "TODO: Regex with index based matching is not suported."
+                        )
                     offsets = match_index_based(data, parsed_args.needle)
                 else:
                     offsets = match(data, needle, is_needle_regex)
@@ -208,12 +229,27 @@ if __name__ == "__main__":
                     matched_bytes = data[offset[0] : offset[1]]
                     matched_disassembly = ""
                     for arch in disassemble_arch:
-                        matched_disassembly += highlight_secondary(" " + '; '.join(subprocess.check_output(['rasm2', '-a', arch, '-d', binascii.hexlify(matched_bytes).decode('ascii')]).decode('latin-1').split('\n')))
+                        matched_disassembly += highlight_secondary(
+                            " "
+                            + "; ".join(
+                                subprocess.check_output(
+                                    [
+                                        "rasm2",
+                                        "-a",
+                                        arch,
+                                        "-d",
+                                        binascii.hexlify(matched_bytes).decode("ascii"),
+                                    ]
+                                )
+                                .decode("latin-1")
+                                .split("\n")
+                            )
+                        )
                     iteration = ""
                     if e != "be" or i != 0:
                         iteration = f"e={e},k={'+' if i > 0 else ''}{i}"
                     results.append(
-                        f"{highlight_bold(filename)}:{highlight_primary(offset[0])}({highlight_primary(hex(offset[0]))}):{highlight_bold(iteration)}{':' if iteration else ''}{binascii.hexlify(matched_bytes).decode('ascii')} {clean_match(matched_bytes, parsed_args.output)}{matched_disassembly}"
+                        f"{highlight_bold(filename)}:{highlight_primary(offset[0])}({highlight_primary(hex(offset[0]))}):{highlight_bold(iteration)}{':' if iteration else ''}{highlight_hex(binascii.hexlify(matched_bytes).decode('ascii'))} {clean_match(matched_bytes, parsed_args.output)}{matched_disassembly}"
                     )
 
     if len(results) < 1:
