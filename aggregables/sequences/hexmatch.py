@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 
+# TODO:
+# - bytes before/after (https://github.com/tmbinc/bgrep)
+# - sections aware (https://github.com/m4b/bingrep)
+
 import argparse
 import binascii
 import re
